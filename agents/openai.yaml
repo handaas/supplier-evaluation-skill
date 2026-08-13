@@ -1,0 +1,4 @@
+interface:
+  display_name: "供应商评估报告"
+  short_description: "聚合多维度数据，供应商评估（工商+风险+供应链+经营，风险+供应链权重最高），产出带置信度的场景化评分报告（雷达图+综合评分）。"
+  default_prompt: "使用 $supplier-evaluation-report 生成「企业名称」的供应商评估报告：聚合相关维度数据，产出 HTML + Markdown + JSON 报告。"

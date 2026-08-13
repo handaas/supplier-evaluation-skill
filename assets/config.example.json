@@ -1,0 +1,5 @@
+{
+  "_comment": "融合报告 skill 配置。skills_dir 指向 handaas-skills 根目录（21 个原子 skill 所在位置）；reports_dir 指向已生成的原子报告 JSON 目录。",
+  "skills_dir": "/Users/sunjackson/Project/handaas-skills",
+  "reports_dir": "/Users/sunjackson/Project/handaas-skills/reports_探迹"
+}
