@@ -521,6 +521,29 @@ def build_fusion_payload(enterprise: str, reports: Mapping[str, Dict[str, Any]],
     abstract_parts.append(composite["assessment"])
     abstract = "".join(abstract_parts)
 
+    # Propagate atomic reports' per-interface pagination metadata and any
+    # incompleteness disclosures instead of issuing extra queries.
+    atomic_pagination: Dict[str, Any] = {}
+    pagination_notes: List[str] = []
+    for skill, rep in reports.items():
+        ds = rep.get("data_source") if isinstance(rep, dict) else None
+        pagination = ds.get("pagination") if isinstance(ds, dict) else None
+        if isinstance(pagination, dict) and pagination:
+            atomic_pagination[skill] = pagination
+            for label, info in pagination.items():
+                if isinstance(info, dict) and not info.get("source_exhausted"):
+                    total = info.get("upstream_total")
+                    fetched = info.get("rows_scanned")
+                    remaining = info.get("remaining_rows")
+                    reason = info.get("stop_reason")
+                    pagination_notes.append(
+                        f"原子报告 {skill} 的「{label}」采集不完整：上游 total={total if total is not None else '未知'}，"
+                        f"实际取得 {fetched if fetched is not None else '未知'} 条，"
+                        f"未纳入 {remaining if remaining is not None else '未知'} 条（停止原因 {reason}）；融合结论仅基于已取得样本。"
+                    )
+    if pagination_notes:
+        abstract += "".join(pagination_notes)
+
     # Build section specs for renderer (radar + dimension table + all detail sections)
     render_sections = [
         {"key": "radar", "title": f"{scenario_label}雷达图", "kind": "radar", "note": f"本场景 {len(matrix)} 维度信号评分（0-100），覆盖面越大综合实力越强", "chart": {}},
@@ -582,6 +605,7 @@ def build_fusion_payload(enterprise: str, reports: Mapping[str, Dict[str, Any]],
             "total_atomic_reports": len([r for r in reports.values() if r]),
             "detail_sections": len(detail_sections),
             "generated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "atomic_pagination": atomic_pagination,
         },
         "metrics": enriched_metrics,
         "core_analysis": {
@@ -606,6 +630,7 @@ def build_fusion_payload(enterprise: str, reports: Mapping[str, Dict[str, Any]],
             "match_type": f"{scenario_label}（融合 {len(relevant_skills)} 个原子 skill）",
             "data_scope": f"覆盖 {quality['dimensions_populated']}/{quality['dimensions_total']} 个维度，{len(detail_sections)} 个明细章节，{quality['detail_data_rows']} 条记录",
             "products": [f"{s} 的 MCP 数据" for s in relevant_skills],
-            "limit": "综合评分基于数据丰富度与证据强度加权计算；明细数据来自各原子 skill 的真实查询结果。",
+            "limit": "综合评分基于数据丰富度与证据强度加权计算；明细数据来自各原子 skill 的真实查询结果。"
+            + ("原子明细分页受限：明细页均计费，融合不追加查询；部分原子报告仅按预算页采集，详见 data_sources.atomic_pagination。" if pagination_notes else ""),
         },
     }

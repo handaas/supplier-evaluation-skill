@@ -90,7 +90,7 @@ def get_connection(domain: str) -> Dict[str, Any]:
     """Return how we connect to one domain's MCP (remote preferred)."""
     url = _env(REMOTE_URL_ENV.get(domain, ""), "HANDAAS_MCP_URL")
     if url and not _is_placeholder(url):
-        token = _env(REMOTE_URL_ENV.get(domain, "").replace("_MCP_URL", "_MCP_TOKEN"), SKILL_MCP_TOKEN, "HANDAAS_MCP_TOKEN") or ""
+        token = _env(REMOTE_URL_ENV.get(domain, "").replace("_MCP_URL", "_MCP_TOKEN"), SKILL_MCP_TOKEN) or ""
         return {"mode": "remote", "url": url, "token": token}
     server_dir = SERVER_REGISTRY.get(domain, "")
     local_path = resolve_server_path(server_dir) if server_dir else None
@@ -115,6 +115,17 @@ def _plain(value: Any) -> Any:
 def _extract_tool_result(value: Any) -> Any:
     plain = _plain(value)
     if isinstance(plain, dict):
+        # MCP CallToolResult.isError is authoritative. Preserve it before
+        # decoding content so tool-level failures cannot masquerade as data.
+        if plain.get("isError") is True or plain.get("is_error") is True:
+            content = plain.get("content")
+            message = "MCP tool returned an error"
+            if isinstance(content, list):
+                texts = [str(item.get("text") or "") for item in content
+                         if isinstance(item, dict) and item.get("type") == "text"]
+                if any(texts):
+                    message = " ".join(texts).strip()
+            return {"_error": message}
         structured = plain.get("structuredContent") or plain.get("structured_content")
         if structured is not None:
             if isinstance(structured, dict) and set(structured.keys()) == {"result"}:
@@ -166,8 +177,7 @@ class MultiMcpClient:
         try:
             await self._stack.__aexit__(*exc)
         except BaseException as close_exc:  # noqa: BLE001 — best-effort cleanup
-            if not isinstance(close_exc, ExceptionGroup):
-                print(f"⚠️  MCP 连接关闭异常（已忽略）: {close_exc}", file=__import__("sys").stderr)
+            print(f"⚠️  MCP 连接关闭异常（已忽略）: {close_exc}", file=__import__("sys").stderr)
         self._sessions.clear()
 
     async def ensure_session(self, domain: str) -> Any:

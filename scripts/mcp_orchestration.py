@@ -17,44 +17,129 @@ Two collection modes:
 
 Both normalize into the SAME unified structure consumed by cross_analysis.
 """
+
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import pathlib
 from typing import Any, Dict, List, Mapping, Optional
 
+from common import collect_detail_pages
 from multi_mcp_client import MultiMcpClient, MultiMcpError
+
+# Live detail interfaces traversed against their upstream total. Only tools
+# whose input schema accepts pageIndex/pageSize AND that return a detail
+# resultList+total are listed here; stats/summary, profile, fuzzy-resolution
+# and single-shot interfaces stay one call.
+#   key (from build_mcp_calls) -> safe interface label
+PAGED_DETAIL_TOOLS: Dict[str, str] = {
+    "risk_hearings": "开庭公告明细",
+    "risk_restrictions": "限制高消费明细",
+    "op_rankings": "企业上榜榜单明细",
+    "channel_search": "渠道明细",
+}
+
+# Detail-list interfaces that return resultList+total but whose tool input
+# schema accepts only ``keyword`` (no pageIndex/pageSize). They stay a single
+# call; when upstream total exceeds the rows returned we disclose the gap so
+# consumers know the collection cannot be completed.
+SCHEMA_LIMITED_DETAIL: Dict[str, str] = {
+    "ent_invest": "对外投资明细",
+    "ent_person": "主要人员明细",
+}
+
+# Default paid-detail budget: one page per detail interface. The page is used
+# both as the data page and as upstream-total discovery (never refetched), and
+# its total/remaining counts are disclosed via attach_pagination. Full
+# traversal requires an explicit positive max_pages budget from the caller.
+DEFAULT_DETAIL_MAX_PAGES = 1
+
+
+def _canonical_request_key(domain: str, tool: str, arguments: Mapping[str, Any]) -> str:
+    """Canonical identity for a paid request so identical calls are never repaid."""
+    return json.dumps(
+        [domain, tool, dict(arguments)], sort_keys=True, ensure_ascii=False, separators=(",", ":")
+    )
 
 # --------------------------------------------------------------------------- #
 # Generic extractors
 # --------------------------------------------------------------------------- #
 
+
 def _is_api_error(value: Any) -> bool:
-    """Detect MCP API error responses (not empty data, but actual failures like 405)."""
+    """Return True for protocol/tool/upstream failures, never for empty data."""
+    markers = (
+        "接口调用失败",
+        "查询失败",
+        "状态码：4",
+        "状态码：5",
+        "error executing tool",
+        "unknown tool",
+        "validation error",
+        "signature",
+        "credential",
+        "unauthorized",
+        "forbidden",
+    )
     if value is None:
         return False
     if isinstance(value, str):
-        return any(s in value for s in ("接口调用失败", "查询失败", "状态码：4", "状态码：5"))
+        return any(m in value.lower() for m in markers)
     if isinstance(value, dict):
-        # Check all string values for error indicators
-        for v in value.values():
-            if isinstance(v, str) and any(s in v for s in ("接口调用失败", "查询失败", "状态码：4", "状态码：5")):
-                return True
+        if (
+            value.get("_error")
+            or value.get("isError") is True
+            or value.get("is_error") is True
+        ):
+            return True
+        code = value.get("code")
+        if code not in (None, 0, "0", 200, "200"):
+            return True
+        return any(_is_api_error(v) for v in value.values())
+    if isinstance(value, list):
+        return any(_is_api_error(v) for v in value)
     return False
 
+
 def _first_list(value: Any) -> List[Any]:
+    if _is_api_error(value):
+        return []
     if isinstance(value, list):
         return value
     if isinstance(value, dict):
-        if _is_api_error(value):
-            return []
-        for key in ("resultList", "list", "items", "data", "holderList", "stockHolderList", "fpFinancingList", "tpQualificationList"):
+        for key in (
+            "resultList",
+            "list",
+            "items",
+            "data",
+            "holderList",
+            "stockHolderList",
+            "fpFinancingList",
+            "tpQualificationList",
+            "punishmentList",
+            "anomalyList",
+            "tmTypeList",
+            "tmStatusList",
+            "winbidStatList",
+            "winbidAreaStat",
+            "tenderStatList",
+            "sentimentLabelList",
+        ):
             if isinstance(value.get(key), list):
                 return value[key]
-    if value in (None, "", {}):
-        return []
-    return [value]
+    return []
+
+
+def _tool_errors(raw: Mapping[str, Any]) -> Dict[str, str]:
+    errors: Dict[str, str] = {}
+    for key, value in raw.items():
+        if str(key).startswith("_"):
+            continue
+        if _is_api_error(value):
+            errors[str(key)] = "工具调用失败"
+    return errors
 
 
 def _safe_total(value: Any) -> Optional[int]:
@@ -72,7 +157,11 @@ def _safe_total(value: Any) -> Optional[int]:
 def _text(value: Any, limit: int = 0) -> str:
     if value is None:
         return ""
-    t = json.dumps(value, ensure_ascii=False) if isinstance(value, (dict, list)) else str(value)
+    t = (
+        json.dumps(value, ensure_ascii=False)
+        if isinstance(value, (dict, list))
+        else str(value)
+    )
     t = " ".join(t.split())
     return (t[: limit - 1].rstrip() + "…") if (limit and len(t) > limit) else t
 
@@ -144,7 +233,9 @@ def _kv_addr(value: Any) -> str:
 # --------------------------------------------------------------------------- #
 # Live collection: MCP tool plan
 # --------------------------------------------------------------------------- #
-def build_mcp_calls(enterprise: str, keyword_type: str) -> List[tuple[str, str, str, Dict[str, Any]]]:
+def build_mcp_calls(
+    enterprise: str, keyword_type: str
+) -> List[tuple[str, str, str, Dict[str, Any]]]:
     """Return [(key, domain, tool, args), ...] for all supplier-evaluation tools."""
     ent_kw: Dict[str, Any] = {"keyword": enterprise}
     mk_kw: Dict[str, Any] = {"matchKeyword": enterprise, "keywordType": keyword_type}
@@ -153,66 +244,241 @@ def build_mcp_calls(enterprise: str, keyword_type: str) -> List[tuple[str, str, 
         ("ent_base", "enterprise", "enterprise_get_enterprise_base_info", ent_kw),
         ("ent_holder", "enterprise", "enterprise_get_enterprise_holder_info", ent_kw),
         ("ent_invest", "enterprise", "enterprise_get_enterprise_invest_info", ent_kw),
-        ("ent_person", "enterprise", "enterprise_get_enterprise_main_person_info", ent_kw),
+        (
+            "ent_person",
+            "enterprise",
+            "enterprise_get_enterprise_main_person_info",
+            ent_kw,
+        ),
         # --- risk (风险) ---
         ("risk_score", "risk", "enterprise_risk_insight_score", mk_kw),
         ("risk_litigation", "risk", "risk_insight_litigation_risk_profile", mk_kw),
-        ("risk_hearings", "risk", "risk_insight_court_hearings", {**mk_kw, "pageSize": 20}),
+        (
+            "risk_hearings",
+            "risk",
+            "risk_insight_court_hearings",
+            {**mk_kw, "pageSize": 50},
+        ),
         ("risk_penalties", "risk", "risk_insight_penalties", mk_kw),
         ("risk_anomalies", "risk", "risk_insight_business_anomalies", mk_kw),
-        ("risk_restrictions", "risk", "risk_insight_consumption_restrictions", {**mk_kw, "pageSize": 20}),
+        (
+            "risk_restrictions",
+            "risk",
+            "risk_insight_consumption_restrictions",
+            {**mk_kw, "pageSize": 50},
+        ),
         ("risk_mortgage", "risk", "risk_insight_chattel_mortgage", mk_kw),
         # --- operation (经营) ---
         ("op_scale", "operation", "operation_insight_business_scale", mk_kw),
         ("op_financing", "operation", "operation_insight_financing_info", mk_kw),
         ("op_trends", "operation", "operation_insight_company_trends", mk_kw),
-        ("op_rankings", "operation", "operation_insight_enterprise_rankings", {**mk_kw, "pageSize": 10}),
+        (
+            "op_rankings",
+            "operation",
+            "operation_insight_enterprise_rankings",
+            {**mk_kw, "pageSize": 10},
+        ),
         # --- channel (渠道) ---
         ("channel_analysis", "channel", "channel_insight_channel_analysis", mk_kw),
-        ("channel_search", "channel", "channel_insight_channel_search", {**mk_kw, "pageSize": 20}),
+        (
+            "channel_search",
+            "channel",
+            "channel_insight_channel_search",
+            {**mk_kw, "pageSize": 50},
+        ),
         # --- factory (工厂) ---
         ("factory_profile", "factory", "factory_insight_factory_profile", mk_kw),
-        ("factory_capabilities", "factory", "factory_insight_factory_capabilities", mk_kw),
-        ("factory_product_stats", "factory", "factory_insight_factory_product_stats", mk_kw),
+        (
+            "factory_capabilities",
+            "factory",
+            "factory_insight_factory_capabilities",
+            mk_kw,
+        ),
+        (
+            "factory_product_stats",
+            "factory",
+            "factory_insight_factory_product_stats",
+            mk_kw,
+        ),
         # --- recruitment (招聘/扩张活跃度) ---
-        ("rec_trend", "recruitment", "recruitment_trend", mk_kw),
         ("rec_profile", "recruitment", "recruitment_employer_profile", mk_kw),
     ]
 
 
-_ENTERPRISE_SUFFIXES = ("公司", "集团", "有限", "院", "厂", "中心", "事务所", "合作社", "合伙")
+_ENTERPRISE_SUFFIXES = (
+    "公司",
+    "集团",
+    "有限",
+    "院",
+    "厂",
+    "中心",
+    "事务所",
+    "合作社",
+    "合伙",
+)
 
 
 def is_full_name(raw: str) -> bool:
     return any(s in (raw or "") for s in _ENTERPRISE_SUFFIXES)
 
 
-async def resolve_enterprise(client: MultiMcpClient, keyword: str) -> Dict[str, Any]:
+async def resolve_enterprise(client: MultiMcpClient, keyword: str, *, call: Any = None) -> Dict[str, Any]:
     """Resolve a keyword to a canonical enterprise name via enterprise MCP fuzzy search."""
     keyword = (keyword or "").strip()
     if not keyword:
         return {"keyword": "", "enterprise": "", "resolved": False}
     if is_full_name(keyword):
-        return {"keyword": keyword, "enterprise": keyword, "resolved": True, "reason": "视为企业全称"}
-    fuzzy = await client.call(
-        "enterprise", "enterprise_get_keyword_search", {"matchKeyword": keyword, "pageSize": 1}
+        return {
+            "keyword": keyword,
+            "enterprise": keyword,
+            "resolved": True,
+            "reason": "视为企业全称",
+        }
+    fuzzy = await (call or client.call)(
+        "enterprise",
+        "enterprise_get_keyword_search",
+        {"matchKeyword": keyword, "pageSize": 5},
     )
-    for rec in _first_list(fuzzy):
-        if isinstance(rec, dict):
-            name = str(rec.get("name") or "").strip()
-            if name:
-                return {"keyword": keyword, "enterprise": name, "resolved": True, "reason": "关键词模糊查询补全"}
-    return {"keyword": keyword, "enterprise": keyword, "resolved": False, "reason": "模糊查询未命中，按关键词直查"}
+    candidates = [
+        str(rec.get("name") or "").strip()
+        for rec in _first_list(fuzzy)
+        if isinstance(rec, dict) and str(rec.get("name") or "").strip()
+    ]
+    exact = next((name for name in candidates if name == keyword), None)
+    if exact:
+        return {
+            "keyword": keyword,
+            "enterprise": exact,
+            "resolved": True,
+            "reason": "精确名称命中",
+        }
+    if len(candidates) == 1:
+        return {
+            "keyword": keyword,
+            "enterprise": candidates[0],
+            "resolved": True,
+            "reason": "唯一候选补全",
+        }
+    reason = (
+        "模糊查询存在多个候选，未自动确认主体"
+        if candidates
+        else "模糊查询未命中，停止后续查询"
+    )
+    return {
+        "keyword": keyword,
+        "enterprise": keyword,
+        "resolved": False,
+        "reason": reason,
+        "candidates": candidates,
+    }
 
 
-async def _collect_live(enterprise: str, keyword_type: str) -> Dict[str, Any]:
-    """Connect to 6 MCP servers, resolve name, fan out all tool calls."""
+async def _collect_live(
+    enterprise: str, keyword_type: str, *, detail_max_pages: Optional[int] = None
+) -> Dict[str, Any]:
+    """Connect to 6 MCP servers, resolve name, fan out all tool calls with
+    bounded total-driven pagination for detail-list interfaces.
+
+    *detail_max_pages* is a paid-call budget per detail interface; the first
+    page doubles as total discovery and is never refetched. Default is the
+    module-level DEFAULT_DETAIL_MAX_PAGES (one page); full traversal requires
+    an explicit positive budget from the caller.
+    """
+    budget = detail_max_pages if detail_max_pages is not None else DEFAULT_DETAIL_MAX_PAGES
+    if isinstance(budget, bool) or not isinstance(budget, int) or budget < 1:
+        raise ValueError("detail_max_pages 必须为正整数或 None（默认单页预算）")
+    loop = asyncio.get_running_loop()
     async with MultiMcpClient() as client:
-        resolved = await resolve_enterprise(client, enterprise)
+
+        # Client-scoped request reuse: identical domain+tool+params within this
+        # task share ONE in-flight awaitable (failures included) and are never
+        # repaid. Lives and dies with this client/task; no persistent cache.
+        inflight: Dict[str, asyncio.Future] = {}
+        executed = 0
+        reused = 0
+
+        async def _call_once(domain: str, tool: str, arguments: Dict[str, Any]) -> Any:
+            nonlocal executed, reused
+            key = _canonical_request_key(domain, tool, arguments)
+            existing = inflight.get(key)
+            if existing is not None:
+                reused += 1
+                return copy.deepcopy(await asyncio.shield(existing))
+            task = asyncio.ensure_future(client.call(domain, tool, arguments))
+            inflight[key] = task
+            executed += 1
+            return copy.deepcopy(await task)
+        if keyword_type == "name":
+            resolved = await resolve_enterprise(client, enterprise, call=_call_once)
+        else:
+            resolved = {"keyword": enterprise, "enterprise": enterprise,
+                        "resolved": bool(enterprise.strip()), "reason": "使用显式企业标识"}
+        if not resolved.get("resolved"):
+            candidates = "；".join(resolved.get("candidates") or [])
+            detail = f"候选企业：{candidates}。" if candidates else "请核对企业查询工具状态与输入。"
+            raise ValueError("企业主体未唯一确认，已停止后续付费查询；请确认企业全称或明确企业标识。" + detail)
         canon = resolved["enterprise"] or enterprise
         calls = build_mcp_calls(canon, keyword_type)
-        raw = await client.call_many(calls)
+        paged = [c for c in calls if c[0] in PAGED_DETAIL_TOOLS]
+        plain = [c for c in calls if c[0] not in PAGED_DETAIL_TOOLS]
+
+        needed: List[str] = []
+        for _k, domain, _t, _a in plain:
+            if domain not in needed:
+                needed.append(domain)
+        await client.warmup(needed)
+
+        async def _one(key: str, domain: str, tool: str, args: Dict[str, Any]) -> tuple[str, Any]:
+            return key, await _call_once(domain, tool, args)
+
+        raw: Dict[str, Any] = {}
+        tasks = [asyncio.ensure_future(_one(k, d, t, a)) for k, d, t, a in plain]
+        for coro in asyncio.as_completed(tasks):
+            try:
+                key, value = await coro
+                raw[key] = value
+            except Exception as exc:  # last-resort isolation, mirrors call_many
+                raw[f"_task_error_{len(raw)}"] = {"_error": str(exc)}
+
+        pagination_payloads: Dict[str, Any] = {}
+        for key, domain, tool, args in paged:
+            label = PAGED_DETAIL_TOOLS[key]
+
+            def _sync_call(_tool: str, _arguments: Dict[str, Any]) -> Any:
+                future = asyncio.run_coroutine_threadsafe(
+                    _call_once(domain, _tool, _arguments), loop
+                )
+                return future.result()
+
+            collected = await asyncio.to_thread(
+                collect_detail_pages,
+                _sync_call, tool, args,
+                get_rows=_first_list, get_total=_safe_total, is_error=_is_api_error,
+                max_pages=budget,
+            )
+            raw[key] = collected
+            pagination_payloads[label] = collected
+        schema_limited: Dict[str, str] = {}
+        for key, label in SCHEMA_LIMITED_DETAIL.items():
+            payload = raw.get(key)
+            total = _safe_total(payload)
+            rows = _first_list(payload)
+            if total is not None and total > len(rows):
+                schema_limited[label] = (
+                    f"{label}工具参数不含分页（仅 keyword），上游 total={total}、"
+                    f"实际取得 {len(rows)} 条，其余 {total - len(rows)} 条无法遍历，采集不完整。"
+                )
     raw["_resolved"] = resolved
+    if pagination_payloads:
+        raw["_pagination_payloads"] = pagination_payloads
+    if schema_limited:
+        raw["_schema_limited"] = schema_limited
+    raw["_detail_max_pages"] = detail_max_pages
+    raw["_call_usage"] = {
+        "executed_requests": executed,
+        "reused_requests": reused,
+        "scope": "current_task_client_lifecycle",
+    }
     return normalize_mcp(raw)
 
 
@@ -253,7 +519,7 @@ def _collect_cache(skills_root: str, enterprise: str) -> Dict[str, Any]:
 def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
     """Normalize live MCP results into the unified cross-analysis structure."""
     resolved = raw.get("_resolved") or {}
-    errors = {k: v["_error"] for k, v in raw.items() if isinstance(v, dict) and "_error" in v}
+    errors = _tool_errors(raw)
 
     # --- enterprise ---
     base_raw = raw.get("ent_base") or {}
@@ -271,7 +537,8 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
         "成立日期": str(bi.get("foundTime") or "-"),
         "经营状态": bi.get("operStatus") or "-",
         "注册地址": bi.get("address") or _kv_addr(bi.get("addressValue")) or "-",
-        "经营范围": _text(bi.get("business") or bi.get("businessScope"), limit=400) or "-",
+        "经营范围": _text(bi.get("business") or bi.get("businessScope"), limit=400)
+        or "-",
     }
     # 实缴率：若实缴与注册资本都可量化则计算
     reg_v = _amount_num(bi.get("regCapital"))
@@ -288,36 +555,60 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
     rl = raw.get("risk_litigation") or {}
     rl = rl if isinstance(rl, dict) else {}
     # litigation: live MCP returns caKaitingList/caLiAnList etc. + summary fields
-    ca_kaiting = _first_list(rl.get("caKaitingList") or rl.get("caseCount"))
     hearings_list = _first_list(raw.get("risk_hearings"))
     hearings_total = _safe_total(raw.get("risk_hearings")) or len(hearings_list)
     # penalties: MCP wraps records in {punishmentCount, punishmentList:[...]}
     penalties_raw = raw.get("risk_penalties") or {}
-    if isinstance(penalties_raw, dict) and isinstance(penalties_raw.get("punishmentList"), list):
+    if isinstance(penalties_raw, dict) and isinstance(
+        penalties_raw.get("punishmentList"), list
+    ):
         penalties_count = _int(penalties_raw.get("punishmentCount"))
-        penalties_list = [r for r in penalties_raw["punishmentList"] if isinstance(r, dict) and r.get("text") != "查询数据为空"]
+        penalties_list = [
+            r
+            for r in penalties_raw["punishmentList"]
+            if isinstance(r, dict) and r.get("text") != "查询数据为空"
+        ]
         penalties_total = penalties_count or len(penalties_list)
     else:
-        penalties_list = [r for r in _first_list(penalties_raw) if isinstance(r, dict) and r.get("text") != "查询数据为空"]
+        penalties_list = [
+            r
+            for r in _first_list(penalties_raw)
+            if isinstance(r, dict) and r.get("text") != "查询数据为空"
+        ]
         penalties_total = _safe_total(penalties_raw) or len(penalties_list)
     # anomalies: MCP may nest {anomalyList:[...], anomalyCount} OR return {text:"查询数据为空"}
     anomalies_raw_raw = raw.get("risk_anomalies") or {}
-    if isinstance(anomalies_raw_raw, dict) and anomalies_raw_raw.get("text") == "查询数据为空":
+    if (
+        isinstance(anomalies_raw_raw, dict)
+        and anomalies_raw_raw.get("text") == "查询数据为空"
+    ):
         anomalies_list = []
-        anomalies_total = 0
-    elif isinstance(anomalies_raw_raw, dict) and isinstance(anomalies_raw_raw.get("anomalyList"), list):
-        anomalies_list = [a for a in anomalies_raw_raw["anomalyList"] if isinstance(a, dict)]
-        anomalies_total = _int(anomalies_raw_raw.get("anomalyCount")) or len(anomalies_list)
+    elif isinstance(anomalies_raw_raw, dict) and isinstance(
+        anomalies_raw_raw.get("anomalyList"), list
+    ):
+        anomalies_list = [
+            a for a in anomalies_raw_raw["anomalyList"] if isinstance(a, dict)
+        ]
     else:
-        anomalies_list = [a for a in _first_list(anomalies_raw_raw) if isinstance(a, dict) and a.get("text") != "查询数据为空"]
-        anomalies_total = _safe_total(anomalies_raw_raw) or len(anomalies_list)
+        anomalies_list = [
+            a
+            for a in _first_list(anomalies_raw_raw)
+            if isinstance(a, dict) and a.get("text") != "查询数据为空"
+        ]
     # restrictions: filter "查询数据为空"
     restrictions_raw = raw.get("risk_restrictions") or {}
-    if isinstance(restrictions_raw, dict) and restrictions_raw.get("text") == "查询数据为空":
+    if (
+        isinstance(restrictions_raw, dict)
+        and restrictions_raw.get("text") == "查询数据为空"
+    ):
         restrictions_list = []
         restrictions_total = 0
     else:
-        restrictions_list = [r for r in _first_list(restrictions_raw) if isinstance(r, dict) and r.get("text") != "查询数据为空"]
+        restrictions_list = [
+            r
+            for r in _first_list(restrictions_raw)
+            if isinstance(r, dict) and r.get("text") != "查询数据为空"
+        ]
         restrictions_total = _safe_total(restrictions_raw) or len(restrictions_list)
     # mortgages: filter "查询数据为空"
     mortgages_raw = raw.get("risk_mortgage") or {}
@@ -325,7 +616,11 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
         mortgages_list = []
         mortgages_total = 0
     else:
-        mortgages_list = [r for r in _first_list(mortgages_raw) if isinstance(r, dict) and r.get("text") != "查询数据为空"]
+        mortgages_list = [
+            r
+            for r in _first_list(mortgages_raw)
+            if isinstance(r, dict) and r.get("text") != "查询数据为空"
+        ]
         mortgages_total = _safe_total(mortgages_raw) or len(mortgages_list)
     # litigation summary: prefer MCP total over list length
     hearings_n = hearings_total
@@ -341,8 +636,42 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
         "失信被执行人数": 0,
     }
     risk = {
-        "score": _int(rs["risk_score"]) if isinstance(rs, dict) and rs.get("risk_score") is not None else (_int(rs.get("riskScore")) if isinstance(rs, dict) else None),
-        "level": (rs["risk_level"] if isinstance(rs, dict) and rs.get("risk_level") else (rs.get("riskLevel") if isinstance(rs, dict) else None)),
+        "_evidence_known": any(
+            (
+                (
+                    isinstance(rs, dict)
+                    and any(
+                        rs.get(key) is not None
+                        for key in (
+                            "risk_score",
+                            "riskScore",
+                            "risk_level",
+                            "riskLevel",
+                        )
+                    )
+                ),
+                _safe_total(raw.get("risk_hearings")) is not None,
+                bool(hearings_list),
+                _int(penalties_raw.get("punishmentCount")) is not None
+                if isinstance(penalties_raw, dict)
+                else False,
+                bool(penalties_list),
+                _int(anomalies_raw_raw.get("anomalyCount")) is not None
+                if isinstance(anomalies_raw_raw, dict)
+                else False,
+                bool(anomalies_list),
+                _safe_total(restrictions_raw) is not None,
+                bool(restrictions_list),
+            )
+        ),
+        "score": _int(rs["risk_score"])
+        if isinstance(rs, dict) and rs.get("risk_score") is not None
+        else (_int(rs.get("riskScore")) if isinstance(rs, dict) else None),
+        "level": (
+            rs["risk_level"]
+            if isinstance(rs, dict) and rs.get("risk_level")
+            else (rs.get("riskLevel") if isinstance(rs, dict) else None)
+        ),
         "credit_level": None,
         "oper_level": None,
         "litigation_level": None,
@@ -369,8 +698,12 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
             "staff": os_.get("enterpriseScale") if isinstance(os_, dict) else None,
             "turnover": os_.get("annualTurnover") if isinstance(os_, dict) else None,
         },
-        "financing_count": _int(of.get("fpFinancingCount")) if isinstance(of, dict) else None,
-        "financing_list": _first_list(of.get("fpFinancingList")) if isinstance(of, dict) else [],
+        "financing_count": _int(of.get("fpFinancingCount"))
+        if isinstance(of, dict)
+        else None,
+        "financing_list": _first_list(of.get("fpFinancingList"))
+        if isinstance(of, dict)
+        else [],
         "trends": ot if isinstance(ot, dict) else {},
         "rankings": _first_list(raw.get("op_rankings")),
     }
@@ -383,7 +716,11 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
         channel_search = []
     else:
         channel_analysis = chan_raw if isinstance(chan_raw, dict) else {}
-        channel_search = [c for c in chan_search if isinstance(c, dict) and c.get("text") != "查询数据为空"]
+        channel_search = [
+            c
+            for c in chan_search
+            if isinstance(c, dict) and c.get("text") != "查询数据为空"
+        ]
     channel = {
         "channelCount": _int(channel_analysis.get("channelCount")),
         "supplierCount": _int(channel_analysis.get("supplierCount")),
@@ -391,6 +728,12 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
         "channelRank": _int(channel_analysis.get("channelRank")),
         "topChannelType": channel_analysis.get("topChannelType"),
         "channelGrowthRate": channel_analysis.get("channelGrowthRate"),
+        "financialStat": channel_analysis.get("financialStat")
+        if isinstance(channel_analysis.get("financialStat"), dict)
+        else {},
+        "salesStat": channel_analysis.get("salesStat")
+        if isinstance(channel_analysis.get("salesStat"), dict)
+        else {},
         "search_list": channel_search,
         "search_total": _safe_total(raw.get("channel_search")) or len(channel_search),
     }
@@ -410,10 +753,14 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
 
     factory = {
         # factory_profile 字段
+        "factoryName": factory_profile.get("name"),
+        "factoryNameId": factory_profile.get("nameId"),
         "factoryScale": factory_profile.get("factoryScale"),
         "factoryAddress": factory_profile.get("factoryAddress"),
         "regCapital": factory_profile.get("regCapital"),
-        "monthlyProductionAmountValue": factory_profile.get("monthlyProductionAmountValue"),
+        "monthlyProductionAmountValue": factory_profile.get(
+            "monthlyProductionAmountValue"
+        ),
         "accountPeriodRisk": factory_profile.get("accountPeriodRisk"),
         "factoryTypeList": _first_list(factory_profile.get("factoryTypeList")),
         # factory_capabilities 字段
@@ -421,35 +768,70 @@ def normalize_mcp(raw: Mapping[str, Any]) -> Dict[str, Any]:
         "boarderStaffNumber": factory_capabilities.get("boarderStaffNumber"),
         "inspectionStaffNumber": factory_capabilities.get("inspectionStaffNumber"),
         "mainDeviceList": _first_list(factory_capabilities.get("mainDeviceList")),
-        "managementSystemCertification": factory_capabilities.get("managementSystemCertification"),
-        "monthlyProductionAmountValue_caps": factory_capabilities.get("monthlyProductionAmountValue"),
+        "managementSystemCertification": factory_capabilities.get(
+            "managementSystemCertification"
+        ),
+        "monthlyProductionAmountValue_caps": factory_capabilities.get(
+            "monthlyProductionAmountValue"
+        ),
         # factory_product_stats 字段
         "serviceBrandCount": _int(factory_product_stats.get("serviceBrandCount")),
         "mainProductCount": _int(factory_product_stats.get("mainProductCount")),
         "tagNames": _first_list(factory_product_stats.get("tagNames")),
-        "productCategoriesStatInfo": _first_list(factory_product_stats.get("productCategoriesStatInfo")),
+        "productCategoriesStatInfo": _first_list(
+            factory_product_stats.get("productCategoriesStatInfo")
+        ),
     }
 
     # --- recruitment ---
-    rt = raw.get("rec_trend") or {}
     rp = raw.get("rec_profile") or {}
     recruitment = {
-        "current": _int(rt.get("recruitingCurrentCount")) if isinstance(rt, dict) else None,
-        "last_3m": _int(rt.get("recruitingLastThreeMonthCount")) if isinstance(rt, dict) else None,
-        "avg_salary": rt.get("recruitingAvgWorkingSalary") if isinstance(rt, dict) else None,
-        "welfare": _first_list(rp.get("recruitingWelfareList") or rp.get("welfareList")) if isinstance(rp, dict) else [],
+        "current": _int(rp.get("recruitingCurrentCount"))
+        if isinstance(rp, dict)
+        else None,
+        "last_3m": _int(rp.get("recruitingLastThreeMonthCount"))
+        if isinstance(rp, dict)
+        else None,
+        "avg_salary": rp.get("recruitingAvgWorkingSalary")
+        if isinstance(rp, dict)
+        else None,
+        "welfare": _first_list(rp.get("recruitingWelfareList") or rp.get("welfareList"))
+        if isinstance(rp, dict)
+        else [],
     }
 
-    return _wrap(resolved, errors, "live", enterprise=resolved.get("enterprise", ""),
-                 base=base, holders=holders, investments=investments, persons=persons,
-                 risk=risk, operation=operation, channel=channel, factory=factory, recruitment=recruitment)
+    return _wrap(
+        resolved,
+        errors,
+        "live",
+        enterprise=resolved.get("enterprise", ""),
+        base=base,
+        holders=holders,
+        investments=investments,
+        persons=persons,
+        risk=risk,
+        operation=operation,
+        channel=channel,
+        factory=factory,
+        recruitment=recruitment,
+        pagination_payloads=raw.get("_pagination_payloads") or {},
+        schema_limited=raw.get("_schema_limited") or {},
+        detail_max_pages=raw.get("_detail_max_pages"),
+        call_usage=raw.get("_call_usage") or {},
+    )
 
 
-def normalize_reports(reports: Mapping[str, Any], enterprise: str, *, resolved: bool = True) -> Dict[str, Any]:
+def normalize_reports(
+    reports: Mapping[str, Any], enterprise: str, *, resolved: bool = True
+) -> Dict[str, Any]:
     """Normalize cached atomic report JSONs into the unified structure (dry-run)."""
     er = reports.get("enterprise-report", {}) if isinstance(reports, dict) else {}
     rr = reports.get("enterprise-risk-report", {}) if isinstance(reports, dict) else {}
-    opr = reports.get("enterprise-operation-report", {}) if isinstance(reports, dict) else {}
+    opr = (
+        reports.get("enterprise-operation-report", {})
+        if isinstance(reports, dict)
+        else {}
+    )
     # supplier 评估场景没有专利，但有 channel 和 factory
     # 缓存模式下，channel/factory 数据可能缺失，先置空
     ch = reports.get("factory-channel-report", {}) if isinstance(reports, dict) else {}
@@ -461,9 +843,17 @@ def normalize_reports(reports: Mapping[str, Any], enterprise: str, *, resolved: 
 
     # enterprise
     ec = _ca(er)
-    base = _kv_to_dict(ec.get("enterprise_base")) if isinstance(ec.get("enterprise_base"), list) else (ec.get("enterprise_base") or {})
+    base = (
+        _kv_to_dict(ec.get("enterprise_base"))
+        if isinstance(ec.get("enterprise_base"), list)
+        else (ec.get("enterprise_base") or {})
+    )
     # 补充 metrics 里的资本充实性字段（enterprise_base KV 可能不含实缴率）
-    for mlabel, bkey in [("资本实缴率", "资本实缴率"), ("注册资本", "注册资本"), ("实缴资本", "实缴资本")]:
+    for mlabel, bkey in [
+        ("资本实缴率", "资本实缴率"),
+        ("注册资本", "注册资本"),
+        ("实缴资本", "实缴资本"),
+    ]:
         mv = _metric_value(er, mlabel)
         if mv and not base.get(bkey):
             base[bkey] = mv
@@ -502,7 +892,6 @@ def normalize_reports(reports: Mapping[str, Any], enterprise: str, *, resolved: 
     }
 
     # channel (缓存模式尝试从 factory-channel-report 读取)
-    chc = _ca(ch)
     channel = {
         "channelCount": _metric_int(ch, "渠道总数"),
         "supplierCount": _metric_int(ch, "供应商数"),
@@ -520,19 +909,27 @@ def normalize_reports(reports: Mapping[str, Any], enterprise: str, *, resolved: 
         "factoryScale": _pick(fic, "工厂规模", "factoryScale"),
         "factoryAddress": _pick(fic, "工厂地址", "factoryAddress"),
         "regCapital": _pick(fic, "注册资本", "regCapital"),
-        "monthlyProductionAmountValue": _pick(fic, "月产能", "monthlyProductionAmountValue"),
+        "monthlyProductionAmountValue": _pick(
+            fic, "月产能", "monthlyProductionAmountValue"
+        ),
         "accountPeriodRisk": _pick(fic, "账期风险", "accountPeriodRisk"),
         "factoryTypeList": _first_list(_pick(fic, "工厂类型", "factoryTypeList")),
         "assemblyLine": _pick(fic, "产线数", "assemblyLine"),
         "boarderStaffNumber": _pick(fic, "普工人数", "boarderStaffNumber"),
         "inspectionStaffNumber": _pick(fic, "质检人数", "inspectionStaffNumber"),
         "mainDeviceList": _first_list(_pick(fic, "主要设备", "mainDeviceList")),
-        "managementSystemCertification": _pick(fic, "管理体系认证", "managementSystemCertification"),
-        "monthlyProductionAmountValue_caps": _pick(fic, "月产能_2", "monthlyProductionAmountValue"),
+        "managementSystemCertification": _pick(
+            fic, "管理体系认证", "managementSystemCertification"
+        ),
+        "monthlyProductionAmountValue_caps": _pick(
+            fic, "月产能_2", "monthlyProductionAmountValue"
+        ),
         "serviceBrandCount": _metric_int(fi, "服务品牌数"),
         "mainProductCount": _metric_int(fi, "主要产品数"),
         "tagNames": _first_list(_pick(fic, "产品标签", "tagNames")),
-        "productCategoriesStatInfo": _first_list(_pick(fic, "产品分类统计", "productCategoriesStatInfo")),
+        "productCategoriesStatInfo": _first_list(
+            _pick(fic, "产品分类统计", "productCategoriesStatInfo")
+        ),
     }
 
     # recruitment
@@ -544,11 +941,27 @@ def normalize_reports(reports: Mapping[str, Any], enterprise: str, *, resolved: 
         "welfare": recc.get("benefit_tags") or [],
     }
 
-    resolved_meta = {"keyword": enterprise, "enterprise": enterprise, "resolved": resolved,
-                     "reason": "缓存报告（dry-run）" if not resolved else "已有报告"}
-    return _wrap(resolved_meta, {}, "cache", enterprise=enterprise,
-                 base=base, holders=holders, investments=investments, persons=persons,
-                 risk=risk, operation=operation, channel=channel, factory=factory, recruitment=recruitment)
+    resolved_meta = {
+        "keyword": enterprise,
+        "enterprise": enterprise,
+        "resolved": resolved,
+        "reason": "缓存报告（dry-run）" if not resolved else "已有报告",
+    }
+    return _wrap(
+        resolved_meta,
+        {},
+        "cache",
+        enterprise=enterprise,
+        base=base,
+        holders=holders,
+        investments=investments,
+        persons=persons,
+        risk=risk,
+        operation=operation,
+        channel=channel,
+        factory=factory,
+        recruitment=recruitment,
+    )
 
 
 def _kv_to_dict(value: Any) -> Dict[str, Any]:
@@ -557,8 +970,21 @@ def _kv_to_dict(value: Any) -> Dict[str, Any]:
     if isinstance(value, list):
         for row in value:
             if isinstance(row, dict):
-                k = row.get("字段") or row.get("名称") or row.get("指标") or row.get("维度") or ""
-                v = row.get("内容") or row.get("值") or row.get("数量") or row.get("占比") or row.get("值/说明") or ""
+                k = (
+                    row.get("字段")
+                    or row.get("名称")
+                    or row.get("指标")
+                    or row.get("维度")
+                    or ""
+                )
+                v = (
+                    row.get("内容")
+                    or row.get("值")
+                    or row.get("数量")
+                    or row.get("占比")
+                    or row.get("值/说明")
+                    or ""
+                )
                 if k:
                     out[str(k)] = v
     elif isinstance(value, dict):
@@ -577,14 +1003,24 @@ def _pick(d: Any, *keys: str) -> Any:
     return None
 
 
-def _wrap(resolved: Mapping[str, Any], errors: Mapping[str, Any], source: str, **domain: Any) -> Dict[str, Any]:
+def _wrap(
+    resolved: Mapping[str, Any], errors: Mapping[str, Any], source: str, **domain: Any
+) -> Dict[str, Any]:
     enterprise = domain.pop("enterprise", resolved.get("enterprise", ""))
+    pagination_payloads = domain.pop("pagination_payloads", {})
+    schema_limited = domain.pop("schema_limited", {})
+    detail_max_pages = domain.pop("detail_max_pages", None)
+    call_usage = domain.pop("call_usage", {})
     return {
         "_meta": {
             "enterprise": enterprise,
             "resolved": dict(resolved),
             "source": source,  # "live" | "cache"
             "errors": dict(errors),
+            "pagination_payloads": dict(pagination_payloads),
+            "schema_limited": dict(schema_limited),
+            "detail_max_pages": detail_max_pages,
+            "call_usage": dict(call_usage),
         },
         "enterprise": {
             "base": domain.get("base", {}),
@@ -603,13 +1039,24 @@ def _wrap(resolved: Mapping[str, Any], errors: Mapping[str, Any], source: str, *
 # --------------------------------------------------------------------------- #
 # Public entry point
 # --------------------------------------------------------------------------- #
-def collect_direct(enterprise: str, keyword_type: str, *, dry_run: bool, skills_root: str) -> Dict[str, Any]:
-    """Collect multi-source data: live MCP (default) or cached reports (dry-run)."""
+def collect_direct(
+    enterprise: str, keyword_type: str, *, dry_run: bool, skills_root: str,
+    detail_max_pages: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Collect multi-source data: live MCP (default) or cached reports (dry-run).
+
+    *detail_max_pages* bounds the paid detail pages per paginated interface in
+    live mode (default: one page, DEFAULT_DETAIL_MAX_PAGES); non-positive
+    values are rejected before any real call.
+    """
     if dry_run:
         return _collect_cache(skills_root, enterprise)
     try:
-        return asyncio.run(_collect_live(enterprise, keyword_type))
+        return asyncio.run(_collect_live(enterprise, keyword_type, detail_max_pages=detail_max_pages))
     except MultiMcpError as exc:
         # No MCP connection available — gracefully degrade to cached reports.
-        print(f"⚠️  MCP 连接不可用 ({exc})，回退到缓存报告模式", file=__import__("sys").stderr)
+        print(
+            f"⚠️  MCP 连接不可用 ({exc})，回退到缓存报告模式",
+            file=__import__("sys").stderr,
+        )
         return _collect_cache(skills_root, enterprise)

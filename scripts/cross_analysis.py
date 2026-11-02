@@ -13,10 +13,11 @@ cross-dimensional insights that NO single atomic skill can generate on its own:
 All evidence is grounded in actual data; missing dimensions are skipped (never
 fabricated).
 """
+
 from __future__ import annotations
 
-import json
 from typing import Any, Dict, List, Mapping, Optional
+
 
 # --------------------------------------------------------------------------- #
 # Tolerant field extraction (handles both live MCP and cached report shapes)
@@ -35,7 +36,13 @@ def _f(value: Any) -> Optional[float]:
     if value is None:
         return None
     try:
-        return float(str(value).replace(",", "").replace("万", "").replace("%", "").replace("亿", ""))
+        return float(
+            str(value)
+            .replace(",", "")
+            .replace("万", "")
+            .replace("%", "")
+            .replace("亿", "")
+        )
     except (TypeError, ValueError):
         return None
 
@@ -86,26 +93,53 @@ def _litigation(data: Mapping[str, Any]) -> Dict[str, Any]:
 
 
 def _litigation_summary(data: Mapping[str, Any]) -> Dict[str, Any]:
-    """Unified litigation info across live MCP (English keys) and cached reports (Chinese keys)."""
     risk = _risk(data)
     lit = _litigation(data)
+    hearings = _i(risk.get("court_hearings_total"))
+    executed = _i(risk.get("restrictions_total"))
     case_count = _i(lit.get("case_count") or lit.get("caseCount"))
     defendant = _i(lit.get("as_defendant") or lit.get("asDefendant"))
     plaintiff = _i(lit.get("as_plaintiff") or lit.get("asPlaintiff"))
-    hearings = risk.get("court_hearings_total") or _i(lit.get("开庭公告数"))
     announcements = _i(lit.get("法院公告数"))
     judgments = _i(lit.get("裁判文书数"))
-    executed = risk.get("restrictions_total") or _i(lit.get("被执行人记录数"))
     dishonest = _i(lit.get("失信被执行人数"))
+    known = any(
+        v is not None and v > 0
+        for v in (
+            hearings,
+            executed,
+            case_count,
+            defendant,
+            plaintiff,
+            announcements,
+            judgments,
+            dishonest,
+        )
+    ) or bool(risk.get("level"))
+    if not known:
+        return {
+            "case_count": None,
+            "as_defendant": None,
+            "as_plaintiff": None,
+            "hearings": None,
+            "announcements": None,
+            "judgments": None,
+            "executed": None,
+            "dishonest": None,
+            "has_role_detail": False,
+        }
     if case_count is None:
-        parts = [v for v in (hearings, announcements, judgments) if v is not None]
-        if parts:
-            case_count = sum(parts)
+        case_count = hearings
     return {
-        "case_count": case_count, "as_defendant": defendant, "as_plaintiff": plaintiff,
-        "hearings": hearings, "announcements": announcements, "judgments": judgments,
-        "executed": executed, "dishonest": dishonest,
-        "has_role_detail": defendant is not None,  # live mode has defendant/plaintiff split
+        "case_count": case_count,
+        "as_defendant": defendant,
+        "as_plaintiff": plaintiff,
+        "hearings": hearings,
+        "announcements": announcements,
+        "judgments": judgments,
+        "executed": executed,
+        "dishonest": dishonest,
+        "has_role_detail": defendant is not None or plaintiff is not None,
     }
 
 
@@ -125,312 +159,245 @@ def _recruitment(data: Mapping[str, Any]) -> Dict[str, Any]:
     return dict(data.get("recruitment") or {})
 
 
+def _risk_evidence_known(data: Mapping[str, Any]) -> bool:
+    """Distinguish an explicitly queried risk result from an empty/failed domain."""
+    risk = _risk(data)
+    marker = risk.get("_evidence_known")
+    if marker is not None:
+        return marker is True
+    if risk.get("score") is not None or risk.get("level") not in (None, "", "-"):
+        return True
+    return any(
+        risk.get(key) is not None
+        for key in (
+            "court_hearings_total",
+            "restrictions_total",
+            "penalties_total",
+            "anomalies_total",
+        )
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Specialty scores (each 0-100, or None if data unavailable)
 # --------------------------------------------------------------------------- #
 def score_supply_capability(data: Mapping[str, Any]) -> Optional[float]:
-    """供货能力: 工厂产能/设备/产线 + 渠道覆盖."""
     factory = _factory(data)
-    channel = _channel(data)
-
-    # 工厂产能维度
-    assembly_line = _i(factory.get("assemblyLine")) or 0
-    production = _f(factory.get("monthlyProductionAmountValue") or factory.get("monthlyProductionAmountValue_caps"))
-    staff = _i(factory.get("boarderStaffNumber")) or 0
+    assembly = _i(factory.get("assemblyLine"))
+    production = _f(
+        factory.get("monthlyProductionAmountValue")
+        or factory.get("monthlyProductionAmountValue_caps")
+    )
+    staff = _i(factory.get("boarderStaffNumber"))
     devices = len(factory.get("mainDeviceList") or [])
-
-    # 渠道维度
-    channel_count = _i(channel.get("channelCount")) or 0
-    supplier_count = _i(channel.get("supplierCount")) or 0
-
-    # 如果完全没有数据，返回 None
-    if (assembly_line == 0 and production is None and staff == 0 and devices == 0 and
-        channel_count == 0 and supplier_count == 0):
+    if all(v in (None, 0) for v in (assembly, production, staff, devices)):
         return None
-
-    s = 0
-    # 工厂产能评分（最高 50 分）
-    if assembly_line:
-        s += min(20, assembly_line * 4)
-    if production:
-        # 月产能转换为评分
-        if production >= 10000000:  # 1000万+
-            s += 20
-        elif production >= 1000000:  # 100万+
-            s += 15
-        elif production >= 100000:  # 10万+
-            s += 10
-        else:
-            s += 5
-    if staff:
-        s += min(10, staff / 10)
-    if devices:
-        s += min(10, devices * 2)
-
-    # 渠道评分（最高 50 分）
-    if channel_count:
-        s += min(25, channel_count * 2)
-    if supplier_count:
-        s += min(25, supplier_count * 1.5)
-
-    return round(max(0, min(100, s)), 1)
+    # Observation index only when core capacity fields exist; channel data never substitutes capacity.
+    s = (
+        min(30, (assembly or 0) * 5)
+        + min(30, (staff or 0) / 10)
+        + min(20, devices * 4)
+        + (20 if production is not None else 0)
+    )
+    return round(min(100, s), 1)
 
 
 def score_compliance_health(data: Mapping[str, Any]) -> Optional[float]:
-    """合规健康度: deduct for penalties / anomalies / restrictions / violations."""
-    risk = _risk(data)
-    n_pen = len(risk.get("penalties") or [])
-    n_ano = len(risk.get("anomalies") or [])
-    n_res = len(risk.get("restrictions") or [])
-    n_vio = len(risk.get("serious_violations") or []) if risk.get("serious_violations") else 0
-    total_hits = n_pen + n_ano + n_res + n_vio
-    if total_hits == 0 and risk.get("score") is None:
+    if not _risk_evidence_known(data):
         return None
-    health = 100 - (n_pen * 14 + n_ano * 9 + n_res * 18 + n_vio * 25)
-    return round(max(0, min(100, health)), 1)
+    risk = _risk(data)
+    hearings = _i(risk.get("court_hearings_total"))
+    restrictions = _i(risk.get("restrictions_total"))
+    penalties = _i(risk.get("penalties_total"))
+    anomalies = _i(risk.get("anomalies_total"))
+    if all(v is None for v in (hearings, restrictions, penalties, anomalies)):
+        return None
+    exposure = (
+        min(60, (hearings or 0) / 5)
+        + min(50, (restrictions or 0) * 10)
+        + min(30, (penalties or 0) * 10)
+        + min(20, (anomalies or 0) * 5)
+    )
+    return round(max(0, 100 - exposure), 1)
 
 
 def score_financial_stability(data: Mapping[str, Any]) -> Optional[float]:
-    """财务稳健性: 实缴率 + 融资 + 经营规模."""
-    base = _base(data)
-    operation = _operation(data)
-
-    paid_rate = _ratio_pct(_pick(base, "资本实缴率", "实缴率", "paidRate", "paidRatio"))
-    if paid_rate is None:
-        reg = _f(_pick(base, "注册资本", "regCapital", "regCapitalValue"))
-        paid = _f(_pick(base, "实缴资本", "realCapital", "paidInCapital"))
-        if reg and paid is not None and reg > 0:
-            paid_rate = paid / reg * 100
-
-    fin_n = _i(operation.get("financing_count")) or 0
-    scale = operation.get("scale") or {}
-    has_scale = bool(_pick(scale, "staff", "人员规模", "enterpriseScale") or _pick(scale, "turnover", "年营业额", "annualTurnover"))
-
-    if paid_rate is None and fin_n == 0 and not has_scale:
-        return None
-
-    s = 0
-    # 实缴率评分（最高 40 分）
-    if paid_rate is not None:
-        if paid_rate >= 80:
-            s += 40
-        elif paid_rate >= 50:
-            s += 25 + (paid_rate - 50) * 0.5
-        elif paid_rate >= 20:
-            s += 10 + (paid_rate - 20) * 0.5
-        else:
-            s += paid_rate * 0.5
-    else:
-        s += 20  # 缺失数据保守给分
-
-    # 融资评分（最高 30 分）
-    s += min(30, fin_n * 8)
-
-    # 经营规模评分（最高 30 分）
-    if has_scale:
-        s += 30
-
-    return round(max(0, min(100, s)), 1)
+    # Registration capital, financing rounds and vendor labels are public clues,
+    # not audited cash-flow, solvency or receivables evidence.
+    return None
 
 
 def score_risk_isolation(data: Mapping[str, Any]) -> Optional[float]:
-    """风险隔离度 (higher = better isolated): penalized by investment breadth × risk."""
-    invest_n = len(_investments(data))
-    risk_score = _i(_risk(data).get("score"))
-    level_text = str(_risk(data).get("level") or "")
-    ls = _litigation_summary(data)
-    defendant = ls["as_defendant"] or 0
-    executed = ls["executed"] or 0
-    dishonest = ls["dishonest"] or 0
-    penalties = len(_risk(data).get("penalties") or [])
-    if risk_score is None and not level_text and invest_n == 0 and defendant == 0 and penalties == 0 and not executed and not dishonest:
+    if not _risk_evidence_known(data):
         return None
-    # risk factor: prefer level text, fall back to raw score
-    if "高" in level_text or "严重" in level_text:
-        risk_factor = 28
-    elif "中" in level_text:
-        risk_factor = 14
-    elif "低" in level_text:
-        risk_factor = 2
-    else:
-        risk_factor = max(0, (risk_score or 50) - 40) * 1.1
-    exposure = invest_n * 4 + risk_factor + defendant * 7 + penalties * 6 + executed * 10 + dishonest * 20
-    return round(max(0, min(100, 100 - exposure)), 1)
+    risk = _risk(data)
+    inv = _i(risk.get("investments_total"))
+    hearings = _i(risk.get("court_hearings_total"))
+    restrictions = _i(risk.get("restrictions_total"))
+    if all(v is None for v in (inv, hearings, restrictions)):
+        return None
+    exposure = (
+        min(35, (inv or 0) / 5)
+        + min(45, (hearings or 0) / 10)
+        + min(60, (restrictions or 0) * 12)
+    )
+    return round(max(0, 100 - exposure), 1)
 
 
 def specialty_scores(data: Mapping[str, Any]) -> Dict[str, Any]:
     items = [
-        ("supply_capability", "供货能力", score_supply_capability(data)),
-        ("compliance_health", "合规健康度", score_compliance_health(data)),
-        ("financial_stability", "财务稳健性", score_financial_stability(data)),
+        ("supply_capability", "产能证据观察", score_supply_capability(data)),
+        ("compliance_health", "司法与合规健康度", score_compliance_health(data)),
+        ("financial_stability", "审计财务稳健性", score_financial_stability(data)),
         ("risk_isolation", "风险隔离度", score_risk_isolation(data)),
     ]
-    valid = [(key, label, v) for key, label, v in items if v is not None]
-    avg = round(sum(v for _, _, v in valid) / len(valid), 1) if valid else None
-    return {"items": items, "valid": valid, "average": avg}
+    valid = [(key, label, value) for key, label, value in items if value is not None]
+    meta = data.get("_meta") or {}
+    resolved_meta = meta.get("resolved") or {}
+    canon = str(resolved_meta.get("enterprise") or "").strip()
+    base = _base(data)
+    base_name = str(_pick(base, "企业名称", "name", "名称") or "").strip()
+    code = str(
+        _pick(base, "统一社会信用代码", "socialCreditCode", "信用代码") or ""
+    ).strip()
+    subject_ok = (
+        base_name not in ("", "-")
+        and code not in ("", "-")
+        and (not canon or base_name == canon)
+    )
+    risk = _risk(data)
+    hearings = _i(risk.get("court_hearings_total"))
+    restrictions = _i(risk.get("restrictions_total"))
+    level = str(risk.get("level") or "")
+    risk_known = (hearings is not None or restrictions is not None) and bool(
+        level or (hearings or 0) > 0 or (restrictions or 0) > 0
+    )
+    judicial_clear = (
+        hearings is not None and hearings < 100 and (restrictions or 0) == 0
+    )
+    supply_ok = score_supply_capability(data) is not None
+    eligible = (
+        subject_ok
+        and not meta.get("errors")
+        and risk_known
+        and judicial_clear
+        and supply_ok
+        and len(valid) >= 3
+    )
+    avg = (
+        round(sum(value for _, _, value in valid) / len(valid), 1) if eligible else None
+    )
+    return {
+        "items": items,
+        "valid": valid,
+        "average": avg,
+        "rating_eligible": eligible,
+        "minimum_domains": 3,
+        "gate_reason": None if eligible else "主体、关键域或司法风险门禁未满足",
+    }
 
 
-# --------------------------------------------------------------------------- #
-# Cross-domain insights
-# --------------------------------------------------------------------------- #
 def insight_supply_risk(data: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
-    """供货能力 × 合规风险: 产能强但风险高 → 供货中断风险."""
-    supply_score = score_supply_capability(data)
-    risk_score = _i(_risk(data).get("score"))
-    risk_level = str(_risk(data).get("level") or "")
-    if supply_score is None and risk_score is None:
+    supply = score_supply_capability(data)
+    risk_known = _risk_evidence_known(data)
+    hearings = _i(_risk(data).get("court_hearings_total")) if risk_known else None
+    restrictions = _i(_risk(data).get("restrictions_total")) if risk_known else None
+    if supply is None and hearings is None and restrictions is None:
         return None
-
-    factory = _factory(data)
-    assembly_line = _i(factory.get("assemblyLine")) or 0
-    production = _f(factory.get("monthlyProductionAmountValue") or factory.get("monthlyProductionAmountValue_caps"))
-    channel = _channel(data)
-    channel_count = _i(channel.get("channelCount")) or 0
-
-    parts = []
-    if assembly_line:
-        parts.append(f"产线 {assembly_line} 条")
-    if production:
-        parts.append(f"月产能 {production/10000:.0f}万" if production >= 10000 else f"月产能 {production:.0f}")
-    if channel_count:
-        parts.append(f"渠道数 {channel_count}")
-
-    evidence = "、".join(parts) if parts else "产能与渠道数据有限"
-    if risk_score is not None or risk_level:
-        evidence += f"，风险评分 {risk_score or '?'}（{risk_level or '-'}）"
-
-    if supply_score and supply_score >= 60 and (risk_score or 0) >= 50:
-        interp = f"供货能力较强（{supply_score:.0f}分）但风险偏高（{risk_level or risk_score}）。存在供货中断风险，建议核查重大风险案件对生产运营的影响，评估备用产能可行性。"
-    elif supply_score and supply_score >= 60:
-        interp = f"供货能力较强（{supply_score:.0f}分），风险可控。产能与渠道覆盖能够支撑订单交付，建议关注产能利用率与交期履约率。"
-    elif supply_score and supply_score < 40:
-        interp = f"供货能力偏弱（{supply_score:.0f}分）。产线、产能或渠道覆盖不足，可能影响订单承接与交付稳定性，建议评估产能扩充计划或渠道拓展策略。"
-    else:
-        interp = "供货与风险数据有限，建议结合实地考察综合评估交付能力。"
-
-    return {"feature": "供货能力与风险匹配度", "evidence": f"{evidence}。", "interpretation": interp}
+    parts = [f"产能观察指数 {supply}" if supply is not None else "核心产能字段未知"]
+    if hearings is not None:
+        parts.append(f"开庭 {hearings} 条")
+    if restrictions is not None:
+        parts.append(f"限高 {restrictions} 条")
+    interp = (
+        "司法暴露触发人工核验门禁，不予供应商综合评级。"
+        if (hearings or 0) >= 100 or (restrictions or 0) > 0
+        else "供货能力仅按已返回核心产能字段观察；缺失字段不得由渠道、招聘或工厂规模标签替代。"
+    )
+    return {
+        "feature": "供货证据与司法暴露",
+        "evidence": "、".join(parts) + "。",
+        "interpretation": interp,
+    }
 
 
 def insight_account_financial(data: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
-    """账期风险 × 财务稳健: 账期风险 + 实缴率/融资."""
     factory = _factory(data)
-    account_risk = _pick(factory, "accountPeriodRisk", "账期风险")
     base = _base(data)
-    paid_rate = _ratio_pct(_pick(base, "资本实缴率", "实缴率"))
-    operation = _operation(data)
-    fin_n = _i(operation.get("financing_count"))
-
-    if not account_risk and paid_rate is None and fin_n == 0:
+    op = _operation(data)
+    account = _pick(factory, "accountPeriodRisk", "账期风险")
+    paid = _ratio_pct(_pick(base, "资本实缴率", "实缴率"))
+    fin = _i(op.get("financing_count"))
+    if account is None and paid is None and fin is None:
         return None
-
     parts = []
-    if account_risk:
-        parts.append(f"账期风险「{account_risk}」")
-    if paid_rate is not None:
-        parts.append(f"实缴率 {paid_rate:.0f}%")
-    if fin_n:
-        parts.append(f"完成 {fin_n} 轮融资")
-
-    evidence = "、".join(parts) + "。" if parts else "财务数据有限。"
-
-    paid_adequate = (paid_rate or 0) >= 50
-    fin_healthy = fin_n and fin_n >= 1
-
-    if account_risk and ("高" in account_risk or "严重" in account_risk):
-        if not paid_adequate and not fin_healthy:
-            interp = "账期风险高且财务稳健性不足，存在回款风险。建议严格审核账期政策，要求缩短账期或提供担保，监控现金流状况。"
-        else:
-            interp = "账期风险较高，但财务基础相对扎实。建议关注应收账款账龄结构，建立动态账期管理机制。"
-    elif account_risk and ("中" in account_risk):
-        interp = "账期风险中等，建议结合合作规模设置合理账期，定期评估客户信用变化。"
-    elif paid_adequate or fin_healthy:
-        interp = "财务稳健性较好，账期风险可控。建议维持健康的账期政策，平衡客户关系与资金周转。"
-    else:
-        interp = "财务稳健性一般，建议结合更多维度数据综合评估。"
-
-    return {"feature": "账期风险与财务稳健性", "evidence": evidence, "interpretation": interp}
+    if account is not None:
+        parts.append(f"数据产品账期标签「{account}」")
+    if paid is not None:
+        parts.append(f"工商实缴率 {paid:.0f}%")
+    if fin is not None:
+        parts.append(f"融资记录 {fin} 轮")
+    return {
+        "feature": "资本与账期公开线索",
+        "evidence": "、".join(parts) + "。",
+        "interpretation": "缺少审计财务、现金流、应收账款账龄和偿债指标，不能据此评价财务稳健或宣称账期风险可控。",
+    }
 
 
 def insight_channel_competition(data: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
-    """渠道竞争力: channelCount vs peerAvgChannelCount → 同行对比定位."""
     channel = _channel(data)
-    channel_count = _i(channel.get("channelCount"))
-    peer_avg = _i(channel.get("peerAvgChannelCount"))
-    rank = _i(channel.get("channelRank"))
-
-    if channel_count is None and peer_avg is None and rank is None:
+    search_total = _i(channel.get("search_total"))
+    financial = channel.get("financialStat") or {}
+    sales = channel.get("salesStat") or {}
+    if search_total is None and not financial and not sales:
         return None
-
-    if channel_count is not None and peer_avg is not None:
-        ratio = channel_count / peer_avg if peer_avg > 0 else 1
-        if ratio >= 1.5:
-            position = "领先"
-        elif ratio >= 0.8:
-            position = "相当"
-        else:
-            position = "偏弱"
-        evidence = f"渠道数 {channel_count}，同行平均 {peer_avg}（{position}）。"
-    elif channel_count is not None:
-        evidence = f"渠道数 {channel_count}（同行对比数据缺失）。"
-    else:
-        evidence = "渠道数据有限。"
-
-    if rank is not None:
-        evidence += f"渠道排名 {rank}。"
-
-    if position == "领先":
-        interp = "渠道覆盖面广，市场拓展能力强，具备一定的规模优势与议价能力。建议关注渠道质量与转化效率，避免盲目扩张。"
-    elif position == "相当":
-        interp = "渠道覆盖与行业平均水平相当，市场竞争力处于合理区间。建议优化渠道结构，提升优质渠道占比。"
-    elif position == "偏弱":
-        interp = "渠道覆盖相对不足，可能限制市场拓展与订单获取。建议评估渠道短板，制定针对性拓展计划或强化核心渠道深度合作。"
-    else:
-        interp = "建议补充同行对比数据以精准定位渠道竞争力。"
-
-    return {"feature": "渠道竞争力（同行对比）", "evidence": evidence, "interpretation": interp}
+    parts = []
+    if search_total is not None:
+        parts.append(f"渠道关联搜索返回 {search_total} 条")
+    if isinstance(financial, dict) and financial.get("categoryCount") is not None:
+        parts.append(f"财务分类样本 {financial.get('categoryCount')}")
+    if isinstance(sales, dict) and sales.get("categoryCount") is not None:
+        parts.append(f"销售分类样本 {sales.get('categoryCount')}")
+    return {
+        "feature": "渠道关联搜索事实",
+        "evidence": "、".join(parts) + "。",
+        "interpretation": "该数据来自渠道关联搜索/统计，记录与目标法人的关系尚未逐条确认；不作渠道领先、覆盖能力或供货能力结论。",
+    }
 
 
 def insight_capacity_operation(data: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
-    """产能 × 经营规模匹配: factory scale vs operation scale."""
     factory = _factory(data)
-    operation = _operation(data)
-
-    factory_scale = _pick(factory, "factoryScale", "工厂规模")
-    production = _f(factory.get("monthlyProductionAmountValue") or factory.get("monthlyProductionAmountValue_caps"))
-    scale = operation.get("scale") or {}
-    op_staff = _pick(scale, "staff", "人员规模", "enterpriseScale")
-    op_turnover = _pick(scale, "turnover", "年营业额", "annualTurnover")
-
-    if not factory_scale and production is None and not op_staff and not op_turnover:
+    op = _operation(data)
+    assembly = _i(factory.get("assemblyLine"))
+    production = _f(
+        factory.get("monthlyProductionAmountValue")
+        or factory.get("monthlyProductionAmountValue_caps")
+    )
+    staff = _i(factory.get("boarderStaffNumber"))
+    devices = len(factory.get("mainDeviceList") or [])
+    if all(v in (None, 0) for v in (assembly, production, staff, devices)):
         return None
-
+    scale = op.get("scale") or {}
     parts = []
-    if factory_scale:
-        parts.append(f"工厂规模「{factory_scale}」")
-    if production:
-        parts.append(f"月产能 {production/10000:.0f}万" if production >= 10000 else f"月产能 {production:.0f}")
-    if op_staff:
-        parts.append(f"人员规模 {op_staff}")
-    if op_turnover:
-        parts.append(f"年营业额 {op_turnover}")
-
-    evidence = "、".join(parts) + "。" if parts else "规模匹配数据有限。"
-
-    # 简化判断：如果都有数据则说明匹配，如果只有一边则提示补充
-    if factory_scale or production:
-        if op_staff or op_turnover:
-            interp = "产能与经营规模数据匹配，产能布局与业务规模基本协调。建议关注产能利用率与订单波动匹配度。"
-        else:
-            interp = "有产能数据但经营规模数据缺失，建议补充营业额/人员数据以评估产能利用效率。"
-    else:
-        interp = "建议补充工厂产能与经营规模数据以评估匹配度。"
-
-    return {"feature": "产能与经营规模匹配度", "evidence": evidence, "interpretation": interp}
+    if assembly is not None:
+        parts.append(f"产线 {assembly} 条")
+    if production is not None:
+        parts.append(f"月产能 {production:g}")
+    if staff is not None:
+        parts.append(f"生产人员 {staff}")
+    if devices:
+        parts.append(f"设备记录 {devices} 项")
+    if _pick(scale, "staff", "人员规模", "enterpriseScale"):
+        parts.append(
+            f"企业人员规模 {_pick(scale, 'staff', '人员规模', 'enterpriseScale')}"
+        )
+    return {
+        "feature": "产能证据与经营规模",
+        "evidence": "、".join(parts) + "。",
+        "interpretation": "核心产能字段已返回，可供人工核验；仍需确认工厂记录与目标法人的统一社会信用代码关系、产能时点和实际利用率。",
+    }
 
 
-# --------------------------------------------------------------------------- #
-# Detail sections (tables fed to the renderer)
-# --------------------------------------------------------------------------- #
 def _holder_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     rows = []
     for h in _holders(data)[:15]:
@@ -445,13 +412,19 @@ def _holder_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
         if isinstance(sub, dict):
             sub = sub.get("amount") or sub.get("value")
         paid = _pick(h, "实缴金额", "payAmount", "实缴", "paidAmount", "认缴/实缴")
-        rows.append({
-            "股东名称": str(_pick(h, "股东名称", "name", "名称", "holderName") or "-"),
-            "持股比例": str(ratio or "-"),
-            "认缴金额": _amount_text(sub),
-            "实缴金额": _amount_text(paid),
-            "股东类型": str(_pick(h, "股东类型", "holderType", "entityType") or "-"),
-        })
+        rows.append(
+            {
+                "股东名称": str(
+                    _pick(h, "股东名称", "name", "名称", "holderName") or "-"
+                ),
+                "持股比例": str(ratio or "-"),
+                "认缴金额": _amount_text(sub),
+                "实缴金额": _amount_text(paid),
+                "股东类型": str(
+                    _pick(h, "股东类型", "holderType", "entityType") or "-"
+                ),
+            }
+        )
     return rows
 
 
@@ -467,9 +440,9 @@ def _amount_text(value: Any) -> str:
         try:
             fv = float(val)
             if fv >= 1e8:
-                return f"{coin} {fv/1e8:.2f}亿".strip()
+                return f"{coin} {fv / 1e8:.2f}亿".strip()
             if fv >= 1e4:
-                return f"{coin} {fv/1e4:.0f}万".strip()
+                return f"{coin} {fv / 1e4:.0f}万".strip()
             return f"{coin} {fv:.0f}".strip()
         except (TypeError, ValueError):
             return f"{coin} {val}".strip()
@@ -477,9 +450,9 @@ def _amount_text(value: Any) -> str:
     try:
         fv = float(str(value).replace(",", ""))
         if fv >= 1e8:
-            return f"人民币 {fv/1e8:.2f}亿"
+            return f"人民币 {fv / 1e8:.2f}亿"
         if fv >= 1e4:
-            return f"人民币 {fv/1e4:.0f}万"
+            return f"人民币 {fv / 1e4:.0f}万"
         return f"人民币 {fv:.0f}"
     except (TypeError, ValueError):
         return str(value)
@@ -495,13 +468,21 @@ def _investment_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
                 iratio = f"{rf * 100:.0f}%" if rf <= 1 else f"{rf:.0f}%"
             except (TypeError, ValueError):
                 pass
-        rows.append({
-            "被投资企业": str(_pick(inv, "name", "企业名称", "对外投资企业", "被投资企业") or "-"),
-            "持股比例": str(iratio or "-"),
-            "经营状态": str(_pick(inv, "operStatus", "经营状态", "状态") or "-"),
-            "成立日期": str(_pick(inv, "foundTime", "成立日期", "成立时间") or "-"),
-            "注册资本": _amount_text(_pick(inv, "subscriptionAmount", "投资金额", "regCapital", "注册资本")),
-        })
+        rows.append(
+            {
+                "被投资企业": str(
+                    _pick(inv, "name", "企业名称", "对外投资企业", "被投资企业") or "-"
+                ),
+                "持股比例": str(iratio or "-"),
+                "经营状态": str(_pick(inv, "operStatus", "经营状态", "状态") or "-"),
+                "成立日期": str(_pick(inv, "foundTime", "成立日期", "成立时间") or "-"),
+                "注册资本": _amount_text(
+                    _pick(
+                        inv, "subscriptionAmount", "投资金额", "regCapital", "注册资本"
+                    )
+                ),
+            }
+        )
     return rows
 
 
@@ -524,11 +505,13 @@ def _channel_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     for c in channel.get("search_list", [])[:20]:
         if not isinstance(c, dict):
             continue
-        rows.append({
-            "渠道名称": str(_pick(c, "channelName", "name", "渠道名称") or "-"),
-            "渠道类型": str(_pick(c, "channelType", "type", "渠道类型") or "-"),
-            "合作状态": str(_pick(c, "status", "合作状态") or "-"),
-        })
+        rows.append(
+            {
+                "渠道名称": str(_pick(c, "channelName", "name", "渠道名称") or "-"),
+                "渠道类型": str(_pick(c, "channelType", "type", "渠道类型") or "-"),
+                "合作状态": str(_pick(c, "status", "合作状态") or "-"),
+            }
+        )
     return rows
 
 
@@ -543,7 +526,12 @@ def _factory_profile_rows(data: Mapping[str, Any]) -> Dict[str, str]:
     reg_cap = _pick(factory, "regCapital", "注册资本")
     if reg_cap:
         out["注册资本"] = str(reg_cap)
-    production = _pick(factory, "monthlyProductionAmountValue", "monthlyProductionAmountValue_caps", "月产能")
+    production = _pick(
+        factory,
+        "monthlyProductionAmountValue",
+        "monthlyProductionAmountValue_caps",
+        "月产能",
+    )
     if production:
         out["月产能"] = str(production)
     if factory.get("accountPeriodRisk"):
@@ -593,7 +581,9 @@ def _specialty_score_rows(scores: Mapping[str, Any]) -> List[Dict[str, Any]]:
     rows = []
     for _key, label, v in scores.get("items", []):
         if v is not None:
-            grade = "优" if v >= 75 else ("良" if v >= 55 else ("中" if v >= 35 else "弱"))
+            grade = (
+                "优" if v >= 75 else ("良" if v >= 55 else ("中" if v >= 35 else "弱"))
+            )
             rows.append({"评估维度": label, "评分": str(v), "等级": grade})
     return rows
 
@@ -608,10 +598,19 @@ def build_verdict(data: Mapping[str, Any], scores: Mapping[str, Any]) -> Dict[st
     blockers: List[str] = []
 
     n_vio = len(risk.get("serious_violations") or [])
-    n_res = len(risk.get("restrictions") or [])
-    n_pen = len(risk.get("penalties") or [])
-    n_ano = len(risk.get("anomalies") or [])
-    risk_score = _i(risk.get("score"))
+    n_res = (
+        risk.get("restrictions_total")
+        if risk.get("restrictions_total") is not None
+        else len(risk.get("restrictions") or [])
+    )
+    n_pen = _i(risk.get("penalties_total"))
+    if n_pen is None:
+        n_pen = len(risk.get("penalties") or [])
+    n_ano = (
+        risk.get("anomalies_total")
+        if risk.get("anomalies_total") is not None
+        else len(risk.get("anomalies") or [])
+    )
     risk_level_text = str(risk.get("level") or "")
 
     if n_vio:
@@ -622,16 +621,17 @@ def build_verdict(data: Mapping[str, Any], scores: Mapping[str, Any]) -> Dict[st
         concerns.append(f"行政处罚 {n_pen} 条")
     if n_ano:
         concerns.append(f"经营异常 {n_ano} 条")
+    hearings = _i(risk.get("court_hearings_total"))
+    if hearings is not None and hearings >= 100:
+        blockers.append(f"开庭公告 {hearings} 条，需人工司法核验")
+    elif hearings:
+        concerns.append(f"开庭公告 {hearings} 条")
     # 风险判断：优先采信风险等级文本，回退到数值
     if risk_level_text:
         if "高" in risk_level_text or "严重" in risk_level_text:
             blockers.append(f"风险等级「{risk_level_text}」")
         elif "中" in risk_level_text:
             concerns.append(f"风险等级「{risk_level_text}」")
-    elif risk_score is not None and risk_score >= 70:
-        blockers.append(f"综合风险评分 {risk_score}（偏高）")
-    elif risk_score is not None and risk_score >= 50:
-        concerns.append(f"综合风险评分 {risk_score}（中等）")
 
     # 供货能力关注
     supply = score_supply_capability(data)
@@ -645,7 +645,14 @@ def build_verdict(data: Mapping[str, Any], scores: Mapping[str, Any]) -> Dict[st
         concerns.append(f"账期风险「{account_risk}」")
 
     avg = scores.get("average")
-    if blockers:
+    if avg is None:
+        level = "不予综合评级" if blockers else "数据不足"
+        recommendation = "人工司法核验" if blockers else "需补充数据"
+        evidence_note = (
+            "、".join((blockers + concerns)[:4]) or "主体确认、关键域或工具调用证据不足"
+        )
+        summary = f"评级门禁未满足，不予综合评级。需核验：{evidence_note}。"
+    elif blockers:
         level = "不建议合作"
         recommendation = "不建议合作" if len(blockers) >= 2 else "需深入调查"
         summary = f"发现 {len(blockers)} 项重大风险阻断项（{'、'.join(blockers)}），供应商准入风险较高，建议审慎决策。"
@@ -660,7 +667,9 @@ def build_verdict(data: Mapping[str, Any], scores: Mapping[str, Any]) -> Dict[st
     elif avg is not None:
         level = "需深入调查"
         recommendation = "需深入调查"
-        summary = f"供应商专项评分均值 {avg} 偏低，建议补充实地考察与更多维度数据深度调查。"
+        summary = (
+            f"供应商专项评分均值 {avg} 偏低，建议补充实地考察与更多维度数据深度调查。"
+        )
     else:
         level = "数据不足"
         recommendation = "需补充数据"
@@ -701,71 +710,153 @@ def analyze(data: Mapping[str, Any]) -> Dict[str, Any]:
     metrics: List[Dict[str, Any]] = []
     risk_score = _i(_risk(data).get("score"))
     if risk_score is not None:
-        metrics.append({"label": "综合风险评分", "value": str(risk_score), "hint": "风险洞察评分（越低越好）", "delta": _risk(data).get("level") or ""})
+        metrics.append(
+            {
+                "label": "上游风险评分",
+                "value": str(risk_score),
+                "hint": "上游评分；方向以同次返回等级为准",
+                "delta": _risk(data).get("level") or "",
+            }
+        )
     inv_n = _risk(data).get("investments_total") or len(_investments(data))
     if inv_n:
-        metrics.append({"label": "对外投资", "value": str(inv_n), "hint": "关联方数量（风险传导面）"})
+        metrics.append(
+            {
+                "label": "对外投资",
+                "value": str(inv_n),
+                "hint": "关联方数量（风险传导面）",
+            }
+        )
     if scores.get("average") is not None:
-        metrics.append({"label": "供应商综合评分", "value": str(scores["average"]), "hint": "4 项专项评分均值", "delta": verdict["level"]})
+        metrics.append(
+            {
+                "label": "供应商综合评分",
+                "value": str(scores["average"]),
+                "hint": f"{len(scores['valid'])} 项有效专项观察均值",
+                "delta": verdict["level"],
+            }
+        )
     # 供货能力指标
     supply = score_supply_capability(data)
     if supply is not None:
-        metrics.append({"label": "供货能力", "value": str(supply), "hint": "工厂产能+渠道覆盖综合评分"})
+        metrics.append(
+            {
+                "label": "产能证据观察",
+                "value": str(supply),
+                "hint": "仅基于已返回的产线/生产人员/设备/月产能字段",
+            }
+        )
     # 合规指标
     n_pen = len(_risk(data).get("penalties") or [])
     if n_pen:
-        metrics.append({"label": "行政处罚", "value": str(n_pen), "hint": "行政处罚记录数"})
+        metrics.append(
+            {"label": "行政处罚", "value": str(n_pen), "hint": "行政处罚记录数"}
+        )
     # 财务指标
     reg = _pick(base, "注册资本", "regCapital", "regCapitalValue")
     if reg:
-        metrics.append({"label": "注册资本", "value": str(reg), "hint": "工商登记注册资本"})
+        metrics.append(
+            {"label": "注册资本", "value": str(reg), "hint": "工商登记注册资本"}
+        )
     paid_rate = _ratio_pct(_pick(base, "资本实缴率", "实缴率"))
     if paid_rate is not None:
-        metrics.append({"label": "资本实缴率", "value": f"{paid_rate:.0f}%", "hint": "实缴资本/注册资本比例"})
+        metrics.append(
+            {
+                "label": "资本实缴率",
+                "value": f"{paid_rate:.0f}%",
+                "hint": "实缴资本/注册资本比例",
+            }
+        )
     fin_n = _i(_operation(data).get("financing_count"))
     if fin_n:
-        metrics.append({"label": "融资轮次", "value": str(fin_n), "hint": "历史融资轮次"})
+        metrics.append(
+            {"label": "融资轮次", "value": str(fin_n), "hint": "历史融资轮次"}
+        )
     # 渠道指标
     channel_count = _i(_channel(data).get("channelCount"))
     if channel_count:
-        metrics.append({"label": "渠道总数", "value": str(channel_count), "hint": "销售/合作渠道数量"})
+        metrics.append(
+            {
+                "label": "渠道总数",
+                "value": str(channel_count),
+                "hint": "销售/合作渠道数量",
+            }
+        )
     peer_avg = _i(_channel(data).get("peerAvgChannelCount"))
     if peer_avg:
-        metrics.append({"label": "同行平均渠道", "value": str(peer_avg), "hint": "行业平均水平"})
+        metrics.append(
+            {"label": "同行平均渠道", "value": str(peer_avg), "hint": "行业平均水平"}
+        )
     # 工厂指标
     assembly_line = _i(_factory(data).get("assemblyLine"))
     if assembly_line:
-        metrics.append({"label": "产线数", "value": str(assembly_line), "hint": "工厂生产线数量"})
+        metrics.append(
+            {"label": "产线数", "value": str(assembly_line), "hint": "工厂生产线数量"}
+        )
     boarder_staff = _i(_factory(data).get("boarderStaffNumber"))
     if boarder_staff:
-        metrics.append({"label": "普工人数", "value": str(boarder_staff), "hint": "工厂生产人员规模"})
+        metrics.append(
+            {
+                "label": "普工人数",
+                "value": str(boarder_staff),
+                "hint": "工厂生产人员规模",
+            }
+        )
     account_risk = _pick(_factory(data), "accountPeriodRisk", "账期风险")
     if account_risk:
-        metrics.append({"label": "账期风险", "value": str(account_risk), "hint": "应收账款账期风险等级"})
+        metrics.append(
+            {
+                "label": "数据产品账期标签",
+                "value": str(account_risk),
+                "hint": "上游公开数据标签，非审计财务或应收账龄结论",
+            }
+        )
     # 招聘指标
     cur_hire = _i(_recruitment(data).get("current"))
     if cur_hire is not None:
-        metrics.append({"label": "在招岗位", "value": str(cur_hire), "hint": "招聘活跃度信号"})
+        metrics.append(
+            {"label": "在招岗位", "value": str(cur_hire), "hint": "招聘活跃度信号"}
+        )
     # 风险计数指标（供应商评估核心信号）— 优先用 MCP total
     risk = _risk(data)
     res_n = risk.get("restrictions_total") or len(risk.get("restrictions") or [])
     if res_n:
-        metrics.append({"label": "限制高消费", "value": str(res_n), "hint": "被执行限高记录数", "delta": "▼" if res_n >= 5 else ""})
+        metrics.append(
+            {
+                "label": "限制高消费",
+                "value": str(res_n),
+                "hint": "被执行限高记录数",
+                "delta": "▼" if res_n >= 5 else "",
+            }
+        )
     hearing_n = risk.get("court_hearings_total")
     if hearing_n:
-        metrics.append({"label": "开庭公告", "value": str(hearing_n), "hint": "诉讼开庭记录总数"})
+        metrics.append(
+            {"label": "开庭公告", "value": str(hearing_n), "hint": "诉讼开庭记录总数"}
+        )
     ano_n = risk.get("anomalies_total") or len(risk.get("anomalies") or [])
     if ano_n:
-        metrics.append({"label": "经营异常", "value": str(ano_n), "hint": "经营异常名录记录"})
+        metrics.append(
+            {"label": "经营异常", "value": str(ano_n), "hint": "经营异常名录记录"}
+        )
     holder_n = len(_holders(data))
     if holder_n:
-        metrics.append({"label": "股东数量", "value": str(holder_n), "hint": "工商公示股东数"})
+        metrics.append(
+            {"label": "股东数量", "value": str(holder_n), "hint": "工商公示股东数"}
+        )
     found_year = _pick(base, "成立日期", "foundTime", "成立时间")
     if found_year and str(found_year)[:4].isdigit():
         import datetime as _dt
+
         age = _dt.datetime.now().year - int(str(found_year)[:4])
         if age >= 0:
-            metrics.append({"label": "成立年限", "value": f"{age} 年", "hint": f"成立于 {str(found_year)[:4]} 年"})
+            metrics.append(
+                {
+                    "label": "成立年限",
+                    "value": f"{age} 年",
+                    "hint": f"成立于 {str(found_year)[:4]} 年",
+                }
+            )
     for _key, label, v in scores["valid"]:
         metrics.append({"label": label, "value": str(v), "hint": "供应商专项评分"})
 
@@ -775,31 +866,70 @@ def analyze(data: Mapping[str, Any]) -> Dict[str, Any]:
 
     holder_rows = _holder_rows(data)
     if holder_rows:
-        section_specs.append({"key": "se_holders", "title": "股东出资结构", "kind": "table",
-                              "note": "股东持股比例与实缴情况（资本充实性核查基础）",
-                              "columns": [("股东名称", "股东名称"), ("持股比例", "持股比例"), ("认缴金额", "认缴金额"), ("实缴金额", "实缴金额"), ("股东类型", "股东类型")]})
+        section_specs.append(
+            {
+                "key": "se_holders",
+                "title": "股东出资结构",
+                "kind": "table",
+                "note": "股东持股比例与实缴情况（资本充实性核查基础）",
+                "columns": [
+                    ("股东名称", "股东名称"),
+                    ("持股比例", "持股比例"),
+                    ("认缴金额", "认缴金额"),
+                    ("实缴金额", "实缴金额"),
+                    ("股东类型", "股东类型"),
+                ],
+            }
+        )
         section_data["se_holders"] = holder_rows
 
     invest_rows = _investment_rows(data)
     if invest_rows:
         inv_total = _risk(data).get("investments_total") or len(_investments(data))
-        section_specs.append({"key": "se_investments", "title": "对外投资清单（关联方敞口）", "kind": "table",
-                              "note": f"共 {inv_total} 家对外投资（展示前 {min(len(_investments(data)), 15)} 家），风险可能经关联方传导",
-                              "columns": [("被投资企业", "被投资企业"), ("持股比例", "持股比例"), ("经营状态", "经营状态"), ("成立日期", "成立日期"), ("注册资本", "注册资本")]})
+        section_specs.append(
+            {
+                "key": "se_investments",
+                "title": "对外投资清单（关联方敞口）",
+                "kind": "table",
+                "note": f"报告总量 {inv_total} 家，当前列表展示 {min(len(_investments(data)), 15)} 家；仅表示关联暴露面，未核验关联方风险传导",
+                "columns": [
+                    ("被投资企业", "被投资企业"),
+                    ("持股比例", "持股比例"),
+                    ("经营状态", "经营状态"),
+                    ("成立日期", "成立日期"),
+                    ("注册资本", "注册资本"),
+                ],
+            }
+        )
         section_data["se_investments"] = invest_rows
 
     score_rows = _specialty_score_rows(scores)
     if score_rows:
-        section_specs.append({"key": "se_specialty", "title": "供应商专项评分矩阵", "kind": "table",
-                              "note": "跨维度交叉评分（供货能力 / 合规健康度 / 财务稳健性 / 风险隔离度）",
-                              "columns": [("评估维度", "评估维度"), ("评分", "评分"), ("等级", "等级")]})
+        section_specs.append(
+            {
+                "key": "se_specialty",
+                "title": "供应商专项评分矩阵",
+                "kind": "table",
+                "note": "产能证据、司法合规与风险隔离观察；缺少审计财务时财务稳健性不评分",
+                "columns": [
+                    ("评估维度", "评估维度"),
+                    ("评分", "评分"),
+                    ("等级", "等级"),
+                ],
+            }
+        )
         section_data["se_specialty"] = score_rows
 
     return {
         "metrics": metrics,
         "insights": cross_insights,
-        "specialty_scores": {"items": [{"key": k, "label": l, "score": v} for k, l, v in scores["items"]],
-                             "average": scores["average"]},
+        "specialty_scores": {
+            "items": [
+                {"key": key, "label": label, "score": value}
+                for key, label, value in scores["items"]
+            ],
+            "average": scores["average"],
+        },
         "verdict": verdict,
         "section_specs": section_specs,
         "section_data": section_data,

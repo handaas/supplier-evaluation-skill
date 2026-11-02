@@ -13,6 +13,7 @@ Usage::
     python render_report.py --input report.json --output report.md
     python render_report.py --input report.json --output report.pdf
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,14 +22,15 @@ import html
 import json
 import pathlib
 import sys
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
-from common import REPORT_TYPE, json_dumps
+from common import json_dumps
 
 
 # --------------------------------------------------------------------------- #
 # IO helpers
 # --------------------------------------------------------------------------- #
+
 
 def load_payload(input_path: str | None) -> Dict[str, Any]:
     if input_path:
@@ -47,6 +49,7 @@ def load_payload(input_path: str | None) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # Generic formatting helpers
 # --------------------------------------------------------------------------- #
+
 
 def as_list(value: Any) -> List[Any]:
     if value is None or value == "":
@@ -81,7 +84,11 @@ def infer_title(data: Mapping[str, Any], explicit: str | None = None) -> str:
     if data.get("title"):
         return str(data["title"])
     subject = data.get("subject") or {}
-    name = subject.get("enterprise") or subject.get("matchKeyword") or subject.get("match_raw")
+    name = (
+        subject.get("enterprise")
+        or subject.get("matchKeyword")
+        or subject.get("match_raw")
+    )
     return f"{name or '目标'} 数据分析报告" if name else "HandaaS 数据分析报告"
 
 
@@ -126,12 +133,16 @@ def _cell_html(value: Any) -> str:
         return "-"
     value = _safe_unwrap_json(value)
     s = text(value)
-    if isinstance(value, str) and (value.startswith("http://") or value.startswith("https://")):
+    if isinstance(value, str) and (
+        value.startswith("http://") or value.startswith("https://")
+    ):
         return f'<a class="source-link" href="{esc(value)}" target="_blank" rel="noopener">{esc(value)}</a>'
     return esc(s)
 
 
-def render_table(rows: Sequence[Any], columns: Sequence[tuple[str, str]] | None = None) -> str:
+def render_table(
+    rows: Sequence[Any], columns: Sequence[tuple[str, str]] | None = None
+) -> str:
     rows = [r for r in rows if isinstance(r, dict)] if rows else []
     if not rows:
         return '<p class="muted">暂无数据</p>'
@@ -157,7 +168,7 @@ def render_table(rows: Sequence[Any], columns: Sequence[tuple[str, str]] | None 
             # Neither matches a real key; assume (key, label) convention
             key, label = (a or ""), (b or a or "")
         norm_cols.append((key, label))
-    head = "".join(f"<th>{html.escape(label)}</th>" for _, label in norm_cols)
+    head = "".join(f"<th>{esc(label)}</th>" for _, label in norm_cols)
     body = []
     for row in rows:
         cells = "".join(f"<td>{_cell_html(row.get(key))}</td>" for key, _ in norm_cols)
@@ -213,7 +224,9 @@ def render_metrics(metrics: Sequence[Any]) -> str:
                 tag_html = f'<span class="m-tag t-down">{esc(d)}</span>'
             else:
                 tag_html = f'<span class="m-tag t-neutral">{esc(d)}</span>'
-        cells.append(f'<div class="biz-metric"><span class="m-name">{label}</span>{tag_html}<span class="m-value">{val}</span></div>')
+        cells.append(
+            f'<div class="biz-metric"><span class="m-name">{label}</span>{tag_html}<span class="m-value">{val}</span></div>'
+        )
     remainder = len(cells) % 4
     if remainder:
         for _ in range(4 - remainder):
@@ -227,13 +240,17 @@ def render_insights(insights: Sequence[Any]) -> str:
         if not isinstance(item, dict):
             continue
         cards.append(
-            f'''<article class="structural-feature-card">
+            f"""<article class="structural-feature-card">
   <h3>{esc(item.get("feature") or "")}</h3>
   <p class="structural-evidence">{esc(item.get("evidence") or "")}</p>
   <p>{esc(item.get("interpretation") or "")}</p>
-</article>'''
+</article>"""
         )
-    return f'<div class="structural-feature-grid">{"".join(cards)}</div>' if cards else '<p class="muted">暂无</p>'
+    return (
+        f'<div class="structural-feature-grid">{"".join(cards)}</div>'
+        if cards
+        else '<p class="muted">暂无</p>'
+    )
 
 
 def render_records(records: Sequence[Any]) -> str:
@@ -250,35 +267,71 @@ def render_records(records: Sequence[Any]) -> str:
 # --------------------------------------------------------------------------- #
 
 ECHARTS_VENDOR_PATH = (
-    pathlib.Path(__file__).resolve().parents[2] / "assets" / "vendor" / "echarts.min.js"
+    pathlib.Path(__file__).resolve().parents[1] / "assets" / "vendor" / "echarts.min.js"
 )
-ECHARTS_CDN = "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"
 
 
-def _echarts_inline_or_cdn() -> str:
-    """Inline the vendored ECharts bundle; fall back to a CDN script tag."""
+def _load_echarts() -> str:
+    """Embed the skill-local library; never generate a hidden online dependency."""
     try:
-        if ECHARTS_VENDOR_PATH.exists():
-            return ECHARTS_VENDOR_PATH.read_text(encoding="utf-8")
-    except Exception:
-        pass
-    return f'document.write("ECharts offline bundle missing. See assets/vendor/echarts.min.js. CDN fallback loaded.");var s=document.createElement("script");s.src="{ECHARTS_CDN}";document.head.appendChild(s);'
+        javascript = ECHARTS_VENDOR_PATH.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise RuntimeError(f"缺少或无法读取本地 ECharts 图表库：{ECHARTS_VENDOR_PATH}；请恢复 skill 的 assets/vendor/echarts.min.js 后重试。") from exc
+    if not javascript.strip():
+        raise RuntimeError(f"本地 ECharts 图表库为空：{ECHARTS_VENDOR_PATH}；不能生成离线图表报告。")
+    return javascript
 
 
-# Lightweight data-driven chart bootstrapper. Reads data-spec JSON from each
-# .chart-canvas and renders the matching ECharts option.
+# The dependency and DOM can become ready in either order. Retry with a bound,
+# recover on script load, and initialize every canvas at most once.
 _HANDAAS_CHART_JS = r"""
 (function(){
-  window.__echarts_instances=[];
+  if(window.__handaas_boot_charts){window.__handaas_boot_charts();return;}
+  window.__echarts_instances=window.__echarts_instances||[];
+  var status=window.__handaas_chart_status={state:'waiting',total:0,ready:0,failed:0};
+  var timer=null, retries=0, MAX_RETRIES=100;
+  var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
+  var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  function summarize(nodes){
+    status.total=nodes.length;status.ready=0;status.failed=0;
+    nodes.forEach(function(el){
+      if(el.getAttribute('data-chart-state')==='ready'){status.ready++;}
+      else if(el.getAttribute('data-chart-state')==='error'){status.failed++;}
+    });
+    status.state=status.ready===status.total?'ready':
+      (status.ready+status.failed===status.total?(status.ready?'degraded':'error'):'waiting');
+  }
   function boot(){
-    if(typeof echarts==='undefined'){return;}
-    var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
-    var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
-    document.querySelectorAll('.chart-canvas').forEach(function(el){
-      var raw=el.getAttribute('data-spec'); if(!raw){return;}
-      var spec; try{spec=JSON.parse(raw.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));}catch(e){return;}
-      var chart=echarts.init(el,null,{renderer:'svg'});
-      window.__echarts_instances.push(chart);
+    if(document.readyState==='loading'){return;}
+    var nodes=document.querySelectorAll('.chart-canvas');
+    if(!nodes.length){summarize(nodes);return;}
+    if(!window.echarts || typeof window.echarts.init!=='function'){
+      var exhausted=retries>=MAX_RETRIES;
+      nodes.forEach(function(el){
+        if(el.__handaas_chart_ready){return;}
+        el.__handaas_dependency_error=true;
+        el.setAttribute('data-chart-state',exhausted?'error':'waiting');
+        el.textContent=exhausted?'图表库加载失败或不可用，请查看数据明细或重新生成离线报告。':'图表库正在加载，数据明细仍可查看。';
+      });
+      summarize(nodes);
+      if(!exhausted && timer===null){
+        retries++;
+        timer=setTimeout(function(){timer=null;boot();},100);
+      }
+      return;
+    }
+    if(timer!==null){clearTimeout(timer);timer=null;}
+    nodes.forEach(function(el){
+      if(el.__handaas_chart_ready || (el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error)){return;}
+      var chart=null;
+      try{
+        var raw=el.getAttribute('data-spec');
+        if(!raw){throw new Error('Missing chart configuration');}
+        // getAttribute already decodes HTML entities; a second decode corrupts labels.
+        var spec=JSON.parse(raw);
+        if(['line','bar','pie','gauge','radar'].indexOf(spec.type)<0){throw new Error('Unsupported chart type');}
+        el.textContent='';
+        chart=window.echarts.init(el,null,{renderer:'svg'});
       var opt={color:PALETTE,tooltip:{trigger: spec.type==='pie'?'item':'axis'},textStyle:{fontFamily:FONTS,fontSize:12,color:'#334155'},grid:{left:48,right:24,top:30,bottom:40},legend:{top:0,textStyle:{fontSize:11}}};
       if(spec.type==='line'){
         opt.xAxis={type:'category',data:spec.x,axisLabel:{fontSize:11,interval:0,rotate: spec.x && spec.x.length>6?35:0}};
@@ -304,26 +357,36 @@ _HANDAAS_CHART_JS = r"""
         opt.radar={indicator:spec.indicators,radius:'62%',axisName:{color:'#475569',fontSize:11},splitArea:{areaStyle:{color:['#f8fbff','#eef4fb']}}};
         opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
       }
-      chart.setOption(opt);
-      window.addEventListener('resize',function(){chart.resize();});
+        chart.setOption(opt);
+        el.__handaas_chart_ready=true;
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','ready');
+        window.__echarts_instances.push(chart);
+      }catch(e){
+        if(chart && typeof chart.dispose==='function'){try{chart.dispose();}catch(ignored){}}
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','error');
+        el.textContent='图表绘制失败，请查看数据明细。';
+      }
     });
+    summarize(nodes);
   }
-  if(document.readyState!=='loading'){boot();}else{document.addEventListener('DOMContentLoaded',boot);}
+  window.__handaas_boot_charts=boot;
   window.__echarts_resize_all=function(){
     (window.__echarts_instances||[]).forEach(function(c){try{c.resize();}catch(e){}});
   };
+  window.addEventListener('resize',window.__echarts_resize_all);
+  window.addEventListener('load',boot);
+  window.addEventListener('pageshow',boot);
+  window.addEventListener('handaas:echarts-ready',boot);
+  // A very late external script can still recover after the bounded retry ends.
+  document.addEventListener('load',function(event){
+    if(event.target && event.target.tagName==='SCRIPT'){boot();}
+  },true);
+  document.addEventListener('DOMContentLoaded',boot);
+  boot();
 })();
 """
-
-
-def _load_echarts() -> str:
-    """Return the ECharts JS to embed inline; fall back to a CDN <script src>."""
-    try:
-        if ECHARTS_VENDOR_PATH.exists():
-            return ECHARTS_VENDOR_PATH.read_text(encoding="utf-8")
-    except Exception:
-        pass
-    return ""  # caller falls back to CDN tag
 
 
 def _num(value: Any) -> float:
@@ -333,7 +396,9 @@ def _num(value: Any) -> float:
         return 0.0
 
 
-def _chart_fallback_table(rows: Sequence[Mapping[str, Any]], columns: Sequence[tuple[str, str]]) -> str:
+def _chart_fallback_table(
+    rows: Sequence[Mapping[str, Any]], columns: Sequence[tuple[str, str]]
+) -> str:
     """Data table shown below the chart (also the no-JS fallback)."""
     return f'<details class="chart-data"><summary>数据明细</summary>{render_table(rows, columns)}</details>'
 
@@ -343,6 +408,7 @@ def _looks_temporal(values: Sequence[str]) -> bool:
     if not values:
         return False
     import re as _re
+
     cnt = 0
     for v in values:
         s = str(v).strip()
@@ -365,6 +431,7 @@ def _sort_rows_by_time(rows: Sequence[Mapping[str, Any]], x_key: str) -> list:
 
     def sort_key(v: str) -> tuple:
         import re as _re
+
         s = str(v).strip().rstrip("年")
         # Normalize to comparable tuple of ints
         parts = _re.split(r"[-/]", s)
@@ -376,19 +443,40 @@ def _sort_rows_by_time(rows: Sequence[Mapping[str, Any]], x_key: str) -> list:
     return [r for _, r in sorted(enumerate(out), key=lambda iv: sort_key(vals[iv[0]]))]
 
 
-def chart_line(title: str, rows: Sequence[Mapping[str, Any]], x_key: str, y_key: str, *, area: bool = False, columns: Sequence[tuple[str, str]] | None = None) -> str:
+def chart_line(
+    title: str,
+    rows: Sequence[Mapping[str, Any]],
+    x_key: str,
+    y_key: str,
+    *,
+    area: bool = False,
+    columns: Sequence[tuple[str, str]] | None = None,
+) -> str:
     rows = [r for r in rows if isinstance(r, dict)]
     if not rows:
         return '<p class="muted">暂无数据</p>'
     rows = _sort_rows_by_time(rows, x_key)
     cols = columns or [(x_key, x_key), (y_key, y_key)]
     data = [{"name": text(r.get(x_key)), "value": _num(r.get(y_key))} for r in rows]
-    spec = {"type": "line", "area": area, "x": [d["name"] for d in data], "series": [{"name": title, "data": [d["value"] for d in data]}]}
+    spec = {
+        "type": "line",
+        "area": area,
+        "x": [d["name"] for d in data],
+        "series": [{"name": title, "data": [d["value"] for d in data]}],
+    }
     head = f'<h4 class="chart-title">{esc(title)}</h4>' if title else ""
     return f'<div class="chart-box">{head}<div class="chart-canvas" data-chart="line" data-spec="{esc(json_dumps(spec))}"></div>{_chart_fallback_table(rows, cols)}</div>'
 
 
-def chart_multi_line(title: str, rows: Sequence[Mapping[str, Any]], x_key: str, series_keys: Sequence[str], *, area: bool = False, columns: Sequence[tuple[str, str]] | None = None) -> str:
+def chart_multi_line(
+    title: str,
+    rows: Sequence[Mapping[str, Any]],
+    x_key: str,
+    series_keys: Sequence[str],
+    *,
+    area: bool = False,
+    columns: Sequence[tuple[str, str]] | None = None,
+) -> str:
     rows = [r for r in rows if isinstance(r, dict)]
     if not rows:
         return '<p class="muted">暂无数据</p>'
@@ -401,36 +489,80 @@ def chart_multi_line(title: str, rows: Sequence[Mapping[str, Any]], x_key: str, 
     return f'<div class="chart-box">{head}<div class="chart-canvas" data-chart="line" data-spec="{esc(json_dumps(spec))}"></div>{_chart_fallback_table(rows, cols)}</div>'
 
 
-def chart_bar(title: str, rows: Sequence[Mapping[str, Any]], name_key: str, value_key: str, *, orient: str = "v", columns: Sequence[tuple[str, str]] | None = None) -> str:
+def chart_bar(
+    title: str,
+    rows: Sequence[Mapping[str, Any]],
+    name_key: str,
+    value_key: str,
+    *,
+    orient: str = "v",
+    columns: Sequence[tuple[str, str]] | None = None,
+) -> str:
     rows = [r for r in rows if isinstance(r, dict)]
     if not rows:
         return '<p class="muted">暂无数据</p>'
     cols = columns or [(name_key, name_key), (value_key, value_key)]
-    data = [{"name": text(r.get(name_key)), "value": _num(r.get(value_key))} for r in rows]
-    spec = {"type": "bar", "orient": orient, "names": [d["name"] for d in data], "values": [d["value"] for d in data]}
+    data = [
+        {"name": text(r.get(name_key)), "value": _num(r.get(value_key))} for r in rows
+    ]
+    spec = {
+        "type": "bar",
+        "orient": orient,
+        "names": [d["name"] for d in data],
+        "values": [d["value"] for d in data],
+    }
     head = f'<h4 class="chart-title">{esc(title)}</h4>' if title else ""
     return f'<div class="chart-box">{head}<div class="chart-canvas" data-chart="bar" data-spec="{esc(json_dumps(spec))}"></div>{_chart_fallback_table(rows, cols)}</div>'
 
 
-def chart_pie(title: str, rows: Sequence[Mapping[str, Any]], name_key: str, value_key: str, *, donut: bool = False, columns: Sequence[tuple[str, str]] | None = None) -> str:
+def chart_pie(
+    title: str,
+    rows: Sequence[Mapping[str, Any]],
+    name_key: str,
+    value_key: str,
+    *,
+    donut: bool = False,
+    columns: Sequence[tuple[str, str]] | None = None,
+) -> str:
     rows = [r for r in rows if isinstance(r, dict)]
     if not rows:
         return '<p class="muted">暂无数据</p>'
     cols = columns or [(name_key, name_key), (value_key, value_key)]
-    data = [{"name": text(r.get(name_key)), "value": _num(r.get(value_key))} for r in rows]
+    data = [
+        {"name": text(r.get(name_key)), "value": _num(r.get(value_key))} for r in rows
+    ]
     spec = {"type": "pie", "donut": donut, "data": data}
     head = f'<h4 class="chart-title">{esc(title)}</h4>' if title else ""
     return f'<div class="chart-box">{head}<div class="chart-canvas" data-chart="pie" data-spec="{esc(json_dumps(spec))}"></div>{_chart_fallback_table(rows, cols)}</div>'
 
 
-def chart_gauge(title: str, value: float, *, level: str = "", max_val: float = 100.0) -> str:
+def chart_gauge(
+    title: str, value: float, *, level: str = "", max_val: float = 100.0
+) -> str:
     spec = {"type": "gauge", "value": _num(value), "max": max_val, "level": level}
     return f'<div class="chart-box chart-box-gauge"><div class="chart-canvas" data-chart="gauge" data-spec="{esc(json_dumps(spec))}"></div></div>'
 
 
-def chart_radar(title: str, indicators: Sequence[Mapping[str, Any]], series: Sequence[Mapping[str, Any]]) -> str:
+def chart_radar(
+    title: str,
+    indicators: Sequence[Mapping[str, Any]],
+    series: Sequence[Mapping[str, Any]],
+) -> str:
     """indicators: [{name, max}], series: [{name, value:[...]}]"""
-    spec = {"type": "radar", "indicators": [{"name": i.get("name", ""), "max": _num(i.get("max", 100))} for i in indicators], "series": [{"name": s.get("name", ""), "value": [_num(v) for v in (s.get("value") or [])]} for s in series]}
+    spec = {
+        "type": "radar",
+        "indicators": [
+            {"name": i.get("name", ""), "max": _num(i.get("max", 100))}
+            for i in indicators
+        ],
+        "series": [
+            {
+                "name": s.get("name", ""),
+                "value": [_num(v) for v in (s.get("value") or [])],
+            }
+            for s in series
+        ],
+    }
     return f'<div class="chart-box"><div class="chart-canvas" data-chart="radar" data-spec="{esc(json_dumps(spec))}"></div></div>'
 
 
@@ -438,9 +570,10 @@ def chart_radar(title: str, indicators: Sequence[Mapping[str, Any]], series: Seq
 # Core analysis rendering — domain-driven via section specs
 # --------------------------------------------------------------------------- #
 
+
 def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str:
     """Render a single section spec into HTML (without pairing). Returns '' if empty."""
-    key = spec.get("key")
+    key = str(spec.get("key") or "")
     body = core.get(key)
     kind = spec.get("kind")
     title_html = f'<h3 class="biz-subsection-title">{esc(spec.get("title", ""))}</h3>'
@@ -457,7 +590,9 @@ def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str
     if kind == "text":
         if not compact(body):
             return ""
-        return f'{title_html}<p class="biz-summary">{esc(compact(body, limit=1500))}</p>'
+        return (
+            f'{title_html}<p class="biz-summary">{esc(compact(body, limit=1500))}</p>'
+        )
     elif kind == "tags":
         joined = compact(body, limit=400)
         if not joined:
@@ -466,7 +601,7 @@ def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str
     elif kind == "kv":
         if not isinstance(body, dict) or not body:
             return ""
-        return f'{title_html}{render_info_list(body)}'
+        return f"{title_html}{render_info_list(body)}"
     elif kind in ("line", "bar", "pie", "donut", "multi_line"):
         rows = [r for r in as_list(body) if isinstance(r, dict)]
         if not rows:
@@ -475,14 +610,42 @@ def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str
         cols = spec.get("columns") or [(k, k) for k in rows[0].keys()]
         chart_html = ""
         if kind == "line":
-            chart_html = chart_line(spec.get("title", ""), rows, ch.get("x", cols[0][1] if cols else ""), ch.get("y", cols[1][1] if len(cols) > 1 else ""), area=ch.get("area", False), columns=cols)
+            chart_html = chart_line(
+                spec.get("title", ""),
+                rows,
+                ch.get("x", cols[0][1] if cols else ""),
+                ch.get("y", cols[1][1] if len(cols) > 1 else ""),
+                area=ch.get("area", False),
+                columns=cols,
+            )
         elif kind == "multi_line":
-            chart_html = chart_multi_line(spec.get("title", ""), rows, ch.get("x", cols[0][1] if cols else ""), ch.get("series", []), area=ch.get("area", False), columns=cols)
+            chart_html = chart_multi_line(
+                spec.get("title", ""),
+                rows,
+                ch.get("x", cols[0][1] if cols else ""),
+                ch.get("series", []),
+                area=ch.get("area", False),
+                columns=cols,
+            )
         elif kind == "bar":
-            chart_html = chart_bar(spec.get("title", ""), rows, ch.get("name", cols[0][1] if cols else ""), ch.get("value", cols[1][1] if len(cols) > 1 else ""), orient=ch.get("orient", "v"), columns=cols)
+            chart_html = chart_bar(
+                spec.get("title", ""),
+                rows,
+                ch.get("name", cols[0][1] if cols else ""),
+                ch.get("value", cols[1][1] if len(cols) > 1 else ""),
+                orient=ch.get("orient", "v"),
+                columns=cols,
+            )
         elif kind in ("pie", "donut"):
-            chart_html = chart_pie(spec.get("title", ""), rows, ch.get("name", cols[0][1] if cols else ""), ch.get("value", cols[1][1] if len(cols) > 1 else ""), donut=(kind == "donut" or bool(ch.get("donut"))), columns=cols)
-        return f'{note}{chart_html}'
+            chart_html = chart_pie(
+                spec.get("title", ""),
+                rows,
+                ch.get("name", cols[0][1] if cols else ""),
+                ch.get("value", cols[1][1] if len(cols) > 1 else ""),
+                donut=(kind == "donut" or bool(ch.get("donut"))),
+                columns=cols,
+            )
+        return f"{note}{chart_html}"
     elif kind == "gauge":
         if not isinstance(body, dict) or not body:
             return ""
@@ -491,7 +654,7 @@ def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str
         lvl = text(body.get(ch.get("level_key", "风险等级")))
         # When paired (pair_with set), skip the info-list so both columns are chart-only and equal height
         info_html = "" if spec.get("pair_with") else render_info_list(body)
-        return f'{title_html}{note}{chart_gauge(spec.get("title", ""), val, level=lvl, max_val=ch.get("max", 100))}{info_html}'
+        return f"{title_html}{note}{chart_gauge(spec.get('title', ''), val, level=lvl, max_val=ch.get('max', 100))}{info_html}"
     elif kind == "radar":
         ch = spec.get("chart") or {}
         inds = ch.get("indicators", [])
@@ -500,18 +663,20 @@ def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str
             inds = body.get("indicators", [])
             sers = body.get("series", [])
         if inds and sers:
-            return f'{title_html}{note}{chart_radar(spec.get("title", ""), inds, sers)}'
+            return f"{title_html}{note}{chart_radar(spec.get('title', ''), inds, sers)}"
         return ""
     elif kind == "table" or kind is None:
         rows = [r for r in as_list(body) if isinstance(r, dict)]
         if not rows:
             return ""
         columns = spec.get("columns") or [(k, k) for k in rows[0].keys()]
-        return f'{title_html}{note}{render_table(rows, columns)}'
+        return f"{title_html}{note}{render_table(rows, columns)}"
     return ""
 
 
-def render_core_analysis_html(core: Mapping[str, Any], sections: Sequence[Mapping[str, Any]]) -> str:
+def render_core_analysis_html(
+    core: Mapping[str, Any], sections: Sequence[Mapping[str, Any]]
+) -> str:
     """Render section specs. Supports ``pair_with`` to place two lightweight
     sections (e.g. gauge + radar) side-by-side in a two-column layout, avoiding
     large whitespace from single-chart sections.
@@ -527,7 +692,7 @@ def render_core_analysis_html(core: Mapping[str, Any], sections: Sequence[Mappin
         if pair_target:
             # Find the pairing section (usually the next one)
             paired_spec = None
-            for s in sections[i + 1:]:
+            for s in sections[i + 1 :]:
                 if s.get("key") == pair_target:
                     paired_spec = s
                     skip_keys.add(pair_target)
@@ -536,7 +701,9 @@ def render_core_analysis_html(core: Mapping[str, Any], sections: Sequence[Mappin
                 left = _render_one_section(core, spec)
                 right = _render_one_section(core, paired_spec)
                 if left and right:
-                    blocks.append(f'<div class="biz-pair"><div>{left}</div><div>{right}</div></div>')
+                    blocks.append(
+                        f'<div class="biz-pair"><div>{left}</div><div>{right}</div></div>'
+                    )
                 elif left:
                     blocks.append(left)
                 elif right:
@@ -583,11 +750,17 @@ def get_sections(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     # Fallback: derive sections from core keys. Use a title map so section
     # headers are Chinese, not raw English snake_case keys.
     _TITLE_MAP = {
-        "enterprise_base": "企业基本信息", "identity_tags": "身份标签",
-        "description": "企业简介", "business": "经营范围", "tags": "标签",
-        "holders": "股东信息", "investments": "对外投资",
-        "branches": "分支机构", "key_persons": "主要人员",
-        "shareholder_top": "股东持股排行", "shareholding_type": "股东类型分布",
+        "enterprise_base": "企业基本信息",
+        "identity_tags": "身份标签",
+        "description": "企业简介",
+        "business": "经营范围",
+        "tags": "标签",
+        "holders": "股东信息",
+        "investments": "对外投资",
+        "branches": "分支机构",
+        "key_persons": "主要人员",
+        "shareholder_top": "股东持股排行",
+        "shareholding_type": "股东类型分布",
         "shareholder_entity": "股东性质分布",
     }
     sections = []
@@ -602,7 +775,6 @@ def get_sections(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
         elif isinstance(value, list) and value:
             sections.append({"key": key, "title": title, "kind": "table"})
     return sections
-
 
 
 # --------------------------------------------------------------------------- #
@@ -653,10 +825,16 @@ def _detect_glossary_terms(report: Mapping[str, Any]) -> list:
 # HTML document
 # --------------------------------------------------------------------------- #
 
-def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] | None = None) -> str:
+
+def render_html(
+    data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] | None = None
+) -> str:
     title = infer_title(data)
     banner = infer_banner(data)
-    generated_at = compact(data.get("data_source", {}).get("generated_at") or dt.datetime.now().astimezone().isoformat(timespec="seconds"))
+    generated_at = compact(
+        data.get("data_source", {}).get("generated_at")
+        or dt.datetime.now().astimezone().isoformat(timespec="seconds")
+    )
     try:
         _gd = dt.datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
         generated_at_cn = f"{_gd.year}年{_gd.month:02d}月{_gd.day:02d}日"
@@ -670,21 +848,32 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
     core = data.get("core_analysis") or {}
     records = data.get("representative_records") or []
     insights = data.get("insights") or []
-    sections = sections or get_sections(data)
+    sections = list(get_sections(data) if sections is None else sections)
+    has_core = bool(sections)
 
-    toc = ["报告摘要", "查询对象与口径", "数据总览", "核心分析", "代表性记录", "特征与洞察"]
+    toc = ["报告摘要", "查询对象与口径", "数据总览"]
+    if has_core:
+        toc.append("核心分析")
+    toc.extend(["代表性记录", "特征与洞察"])
     toc_html = "".join(f"<li><span>{esc(item)}</span></li>" for item in toc)
 
     scope_items = []
     for key in ("match_target", "match_type", "data_scope", "limit"):
         if caliber.get(key):
             scope_items.append((CALIBER_LABELS.get(key, key), caliber[key]))
-    scope_html = "".join(
-        f'<div class="biz-scope-item"><span>{esc(label)}</span><strong>{esc(value)}</strong></div>'
-        for label, value in scope_items
-    ) or '<div class="biz-scope-item"><span>说明</span><strong>见正文口径章节</strong></div>'
+    scope_html = (
+        "".join(
+            f'<div class="biz-scope-item"><span>{esc(label)}</span><strong>{esc(value)}</strong></div>'
+            for label, value in scope_items
+        )
+        or '<div class="biz-scope-item"><span>说明</span><strong>见正文口径章节</strong></div>'
+    )
 
-    exec_html = "".join(f"<li>{esc(line)}</li>" for line in exec_summary) if exec_summary else ""
+    exec_html = (
+        "".join(f"<li>{esc(line)}</li>" for line in exec_summary)
+        if exec_summary
+        else ""
+    )
     # Build cover findings from insights (top 4) to fill the cover page
     cover_insights = insights[:4] if insights else []
     findings_html = ""
@@ -696,7 +885,9 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
             interpretation = esc(compact(ins.get("interpretation", ""), limit=80))
             text = evidence if evidence else interpretation
             if feature and text:
-                cards.append(f'<div class="finding-card"><p class="f-label">{feature}</p><p class="f-text">{text}</p></div>')
+                cards.append(
+                    f'<div class="finding-card"><p class="f-label">{feature}</p><p class="f-text">{text}</p></div>'
+                )
         if cards:
             findings_html = f'<div class="cover-findings"><h3 class="cover-findings-title">核心发现</h3><div class="cover-findings-grid">{"".join(cards)}</div></div>'
     # --- Cover page enrichment: dimensions, scope, supplementary metrics ---
@@ -704,7 +895,11 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
 
     # 1) Analysis dimensions from section titles
     _dim_titles = [s.get("title", "") for s in sections if s.get("title")]
-    _dim_tags = "".join(f'<span class="dim-tag">{esc(t)}</span>' for t in _dim_titles) if _dim_titles else ""
+    _dim_tags = (
+        "".join(f'<span class="dim-tag">{esc(t)}</span>' for t in _dim_titles)
+        if _dim_titles
+        else ""
+    )
     dimensions_html = ""
     if _dim_tags:
         dimensions_html = f'<div class="cover-dimensions"><span class="dim-label">分析维度</span><div class="dim-tags">{_dim_tags}</div></div>'
@@ -717,7 +912,10 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
         _scope_parts.append(("覆盖范围", str(caliber["data_scope"])[:80]))
     scope_bar_html = ""
     if _scope_parts:
-        _scope_items = "".join(f'<span class="scope-item"><em>{esc(l)}</em>{esc(v)}</span>' for l, v in _scope_parts)
+        _scope_items = "".join(
+            f'<span class="scope-item"><em>{esc(label)}</em>{esc(value)}</span>'
+            for label, value in _scope_parts
+        )
         scope_bar_html = f'<div class="cover-scope-bar">{_scope_items}</div>'
 
     # 3) Supplementary metrics from insight evidence (only when sparse)
@@ -740,11 +938,13 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
                 continue
             _val = None
             # Try percentage first (e.g., "占比约 31%", "合计 62%（CR3）")
-            _pct_match = _re_sup.search(r'(\d+(?:\.\d+)?)\s*%', evidence)
+            _pct_match = _re_sup.search(r"(\d+(?:\.\d+)?)\s*%", evidence)
             if _pct_match:
                 _val = f"{_pct_match.group(1)}%"
             else:
-                _num_match = _re_sup.search(r'(\d[\d,]*(?:\.\d+)?)\s*(件|个|家|条|人|轮|次|项|场)', evidence)
+                _num_match = _re_sup.search(
+                    r"(\d[\d,]*(?:\.\d+)?)\s*(件|个|家|条|人|轮|次|项|场)", evidence
+                )
                 if _num_match:
                     _raw = _num_match.group(1).replace(",", "")
                     try:
@@ -776,9 +976,17 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
         if _supplementary:
             metrics = list(metrics) + _supplementary
 
-
-
-    core_html = render_core_analysis_html(core, sections)
+    core_html = render_core_analysis_html(core, sections) if has_core else ""
+    core_section_html = ""
+    if has_core:
+        core_section_html = (
+            f'<section class="report-page biz-section"><div class="report-topbar">'
+            f'<div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div>'
+            '<div class="biz-section-head"><div><h2>核心分析</h2>'
+            '<p class="biz-section-note">按维度展开目标核心数据与结构化明细。</p></div>'
+            '<span class="biz-tag">Analysis</span></div>'
+            f"{core_html}</section>"
+        )
 
     # Build glossary section from detected professional terms
     _glossary_terms = _detect_glossary_terms(data)
@@ -796,7 +1004,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
             f'<p class="biz-section-note">报告中涉及的专业术语与统计指标说明。</p></div>'
             f'<span class="biz-tag">Glossary</span></div>'
             f'<div class="glossary-list">{_glossary_rows}</div>'
-            f'</section>'
+            f"</section>"
         )
 
     return f"""<!doctype html>
@@ -946,6 +1154,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
     .chart-box-gauge {{ max-width:380px; }}
     .chart-title {{ margin:0 0 8px; color:#0b3768; font-size:15px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }}
     .chart-canvas {{ width:100%; height:300px; }}
+    .chart-canvas[data-chart-state="waiting"],.chart-canvas[data-chart-state="error"] {{ display:flex; align-items:center; justify-content:center; color:#64748b; font-size:13px; text-align:center; }}
     .chart-box-gauge .chart-canvas {{ height:240px; }}
     .chart-data {{ margin-top:10px; }}
     .chart-data summary {{ cursor:pointer; color:#0b5ca8; font-size:12px; font-weight:700; padding:4px 0; }}
@@ -965,7 +1174,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
     .glossary-term {{ display:flex; align-items:flex-start; padding:12px 14px; background:#f1f6fb; color:#0b5ca8; font-size:13px; font-weight:800; border-right:3px solid #0b5ca8; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }}
     .glossary-def {{ padding:12px 16px; color:#334155; font-size:13px; line-height:1.7; }}
   </style>
-  <script>{_echarts_inline_or_cdn()}</script>
+  <script>{_load_echarts()}</script>
   <script>{_HANDAAS_CHART_JS}</script>
 </head>
 <body>
@@ -984,9 +1193,9 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
         <p class="report-kicker">SUPPLIER EVALUATION</p>
         <h1>{esc(title)}</h1>
         <p class="report-lead">{esc(compact(abstract, limit=400) or "本报告基于商标公开数据，对目标商标的核心维度进行结构化呈现。")}</p>
-        <div class="abstract-box">报告涵盖查询对象、数据总览、核心分析、代表性记录与结构洞察，所有数据均标注口径与来源。</div>
+        <div class="abstract-box">报告涵盖查询对象、数据总览、代表性记录与结构洞察，所有数据均标注口径与来源。</div>
         {render_metrics(metrics)}
-        {'<ul class="exec-list">' + exec_html + '</ul>' if exec_html else ''}
+        {'<ul class="exec-list">' + exec_html + "</ul>" if exec_html else ""}
         {findings_html}
         {dimensions_html}
         {scope_bar_html}
@@ -995,9 +1204,9 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
   </article>
   <main class="research-doc">
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div><div class="biz-section-head"><div><h2>报告摘要</h2><p class="biz-section-note">概述分析对象、数据覆盖范围与核心发现。</p></div><span class="biz-tag">Summary</span></div><p class="biz-summary">{esc(abstract or "暂无摘要。")}</p></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div><div class="biz-section-head"><div><h2>查询对象与口径</h2><p class="biz-section-note">说明匹配对象、匹配方式与数据范围。</p></div><span class="biz-tag">Caliber</span></div>{render_info_list({'匹配对象': caliber.get('match_target') or subject.get('enterprise') or '-', '匹配方式': caliber.get('match_type') or '-', '数据范围': caliber.get('data_scope') or '-', '局限说明': caliber.get('limit') or '-'})}</section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div><div class="biz-section-head"><div><h2>查询对象与口径</h2><p class="biz-section-note">说明匹配对象、匹配方式与数据范围。</p></div><span class="biz-tag">Caliber</span></div>{render_info_list({"匹配对象": caliber.get("match_target") or subject.get("enterprise") or "-", "匹配方式": caliber.get("match_type") or "-", "数据范围": caliber.get("data_scope") or "-", "局限说明": caliber.get("limit") or "-"})}</section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div><div class="biz-section-head"><div><h2>数据总览</h2><p class="biz-section-note">关键指标一览。</p></div><span class="biz-tag">Metrics</span></div>{render_metrics(metrics) or '<p class="muted">暂无指标</p>'}</section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div><div class="biz-section-head"><div><h2>核心分析</h2><p class="biz-section-note">按维度展开目标核心数据与结构化明细。</p></div><span class="biz-tag">Analysis</span></div>{core_html}</section>
+    {core_section_html}
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div><div class="biz-section-head"><div><h2>代表性记录</h2><p class="biz-section-note">关键明细记录 Top N。</p></div><span class="biz-tag">Records</span></div>{render_records(records)}</section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">{esc(banner)}</div></div><div class="biz-section-head"><div><h2>特征与洞察</h2><p class="biz-section-note">基于数据的结构化解读。</p></div><span class="biz-tag">Insights</span></div>{render_insights(insights)}</section>
     {glossary_html}
@@ -1011,7 +1220,10 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
 # Markdown document
 # --------------------------------------------------------------------------- #
 
-def md_table(rows: Sequence[Any], columns: Sequence[tuple[str, str]] | None = None) -> str:
+
+def md_table(
+    rows: Sequence[Any], columns: Sequence[tuple[str, str]] | None = None
+) -> str:
     rows = [r for r in rows if isinstance(r, dict)] if rows else []
     if not rows:
         return "_暂无数据_\n"
@@ -1021,7 +1233,11 @@ def md_table(rows: Sequence[Any], columns: Sequence[tuple[str, str]] | None = No
     sep = "| " + " | ".join("---" for _ in columns) + " |"
     body = []
     for row in rows:
-        body.append("| " + " | ".join(text(row.get(key, "")) or "-" for key, _ in columns) + " |")
+        body.append(
+            "| "
+            + " | ".join(text(row.get(key, "")) or "-" for key, _ in columns)
+            + " |"
+        )
     return "\n".join([head, sep, *body]) + "\n"
 
 
@@ -1043,7 +1259,9 @@ def render_markdown(data: Dict[str, Any]) -> str:
         lines.append(f"_生成时间：{ds.get('generated_at')}_\n")
 
     lines.append("## 一、查询对象与口径\n")
-    lines.append(f"- 匹配对象：{caliber.get('match_target') or subject.get('enterprise') or '-'}")
+    lines.append(
+        f"- 匹配对象：{caliber.get('match_target') or subject.get('enterprise') or '-'}"
+    )
     lines.append(f"- 匹配方式：{caliber.get('match_type') or '-'}")
     lines.append(f"- 数据范围：{caliber.get('data_scope') or '-'}")
     lines.append(f"- 局限说明：{caliber.get('limit') or '-'}\n")
@@ -1054,10 +1272,13 @@ def render_markdown(data: Dict[str, Any]) -> str:
         lines.append("| --- | --- | --- |")
         for m in metrics:
             if isinstance(m, dict):
-                lines.append(f"| {m.get('label','')} | {m.get('value','-')} | {m.get('hint','')} |")
+                lines.append(
+                    f"| {m.get('label', '')} | {m.get('value', '-')} | {m.get('hint', '')} |"
+                )
         lines.append("")
 
-    lines.append("## 三、核心分析\n")
+    if sections:
+        lines.append("## 三、核心分析\n")
     for spec in sections:
         key = spec.get("key")
         body = core.get(key)
@@ -1098,28 +1319,32 @@ def render_markdown(data: Dict[str, Any]) -> str:
         lines.append("## 五、特征与洞察\n")
         for item in insights:
             if isinstance(item, dict):
-                lines.append(f"### {item.get('feature','')}")
-                lines.append(f"- 证据：{item.get('evidence','')}")
-                lines.append(f"- 解读：{item.get('interpretation','')}\n")
+                lines.append(f"### {item.get('feature', '')}")
+                lines.append(f"- 证据：{item.get('evidence', '')}")
+                lines.append(f"- 解读：{item.get('interpretation', '')}\n")
 
     lines.append("## 六、数据口径与来源\n")
-    lines.append(f"- 数据来源：{ds.get('mcp_server','-')}")
-    lines.append(f"- 生成时间：{ds.get('generated_at','-')}")
+    lines.append(f"- 数据来源：{ds.get('mcp_server', '-')}")
+    lines.append(f"- 生成时间：{ds.get('generated_at', '-')}")
     lines.append(f"- 模式：{'Dry-run 样例' if ds.get('dry_run') else '真实查询'}")
     return "\n".join(lines)
 
 
-def build_payload(*args: Any, **kwargs: Any) -> Dict[str, Any]:  # pragma: no cover (placeholder for import compat)
+def build_payload(
+    *args: Any, **kwargs: Any
+) -> Dict[str, Any]:  # pragma: no cover (placeholder for import compat)
     return {}
 
 
 def html_to_pdf(html_str: str, pdf_path: str) -> None:
     """Convert HTML string to PDF using Playwright headless Chromium."""
     import tempfile
+
     tmp = pathlib.Path(tempfile.mktemp(suffix=".html"))
     try:
         tmp.write_text(html_str, encoding="utf-8")
         from playwright.sync_api import sync_playwright
+
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
@@ -1127,26 +1352,40 @@ def html_to_pdf(html_str: str, pdf_path: str) -> None:
             # Wait for ECharts SVG rendering to complete
             page.wait_for_timeout(2000)
             # Force all ECharts instances to resize before PDF capture
-            page.evaluate("window.__echarts_resize_all && window.__echarts_resize_all()")
+            page.evaluate(
+                "window.__echarts_resize_all && window.__echarts_resize_all()"
+            )
             page.wait_for_timeout(500)
             page.pdf(
                 path=pdf_path,
                 format="A4",
                 print_background=True,
-                margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
+                margin={
+                    "top": "12mm",
+                    "bottom": "12mm",
+                    "left": "10mm",
+                    "right": "10mm",
+                },
             )
             browser.close()
     except ImportError:
-        print("⚠️  PDF 转换需要 Playwright (pip install playwright && playwright install chromium)", file=sys.stderr)
+        print(
+            "⚠️  PDF 转换需要 Playwright (pip install playwright && playwright install chromium)",
+            file=sys.stderr,
+        )
         raise
     finally:
         tmp.unlink(missing_ok=True)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Render a HandaaS data report as HTML, Markdown or PDF.")
+    parser = argparse.ArgumentParser(
+        description="Render a HandaaS data report as HTML, Markdown or PDF."
+    )
     parser.add_argument("--input", help="JSON report path; reads stdin when omitted.")
-    parser.add_argument("--output", help="Output path; .html, .md or .pdf decides format.")
+    parser.add_argument(
+        "--output", help="Output path; .html, .md or .pdf decides format."
+    )
     parser.add_argument("--title", help="Override report title.")
     args = parser.parse_args()
 

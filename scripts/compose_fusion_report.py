@@ -65,6 +65,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Compose a supplier-evaluation report.")
     parser.add_argument("--enterprise", required=True, help="企业全称或关键词（关键词自动模糊补全）")
     parser.add_argument("--keyword-type", default="name", help="主体类型：name/nameId/regNumber/socialCreditCode")
+    parser.add_argument("--max-pages", type=int, default=None,
+                        help="每个分页明细接口最多请求的页数（正整数，默认 1 页）；每页均计费，先规划结论与数据维度再定预算")
     parser.add_argument("--dry-run", action="store_true", help="不调真实 MCP，读缓存报告做交叉分析")
     parser.add_argument("--no-direct-mcp", action="store_true", help="禁用多 MCP 直连，改用旧融合引擎聚合原子报告")
     parser.add_argument("--reports-dir", help="[旧模式] 读取已有原子报告 JSON 的目录")
@@ -75,12 +77,15 @@ def main() -> None:
     parser.add_argument("--pdf-output", help="额外输出 PDF 报告（.pdf）；需要 Playwright + Chromium")
     args = parser.parse_args()
 
+    if args.max_pages is not None and (args.max_pages < 1):
+        parser.error("--max-pages 必须为正整数（默认 1）")
+
     # Default: direct multi-MCP mode (unless legacy flags explicitly request old engine)
     use_direct = not (args.no_direct_mcp or args.reports_dir or args.skills_dir)
     if use_direct:
         print(f"模式: 直连多 MCP 交叉分析（{'dry-run 缓存' if args.dry_run else '真实查询'}）", file=sys.stderr)
         from compose_direct import build_direct_payload
-        payload = build_direct_payload(args.enterprise, args.keyword_type, dry_run=args.dry_run, skills_root=str(SKILLS_ROOT))
+        payload = build_direct_payload(args.enterprise, args.keyword_type, dry_run=args.dry_run, skills_root=str(SKILLS_ROOT), max_pages=args.max_pages)
         _emit(payload, args)
         return
 
@@ -131,4 +136,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from None

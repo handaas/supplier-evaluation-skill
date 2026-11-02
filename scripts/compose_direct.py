@@ -9,6 +9,7 @@ score matrix, and a structured verdict.
 Output payload follows the unified JSON skeleton so render_report.py renders it
 unchanged.
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -17,7 +18,17 @@ from typing import Any, Dict, List, Mapping, Optional
 
 import mcp_orchestration as orch
 import cross_analysis as xa
-from cross_analysis import _pick, _i, _base, _risk, _operation, _channel, _factory, _recruitment, _holders, _investments
+from cross_analysis import (
+    _pick,
+    _i,
+    _base,
+    _risk,
+    _operation,
+    _channel,
+    _factory,
+    _recruitment,
+    _investments,
+)
 
 REPORT_TYPE = "supplier_evaluation_direct"
 BANNER = "供应商评估报告"
@@ -27,7 +38,10 @@ BANNER = "供应商评估报告"
 # --------------------------------------------------------------------------- #
 _BASE_FIELDS = [
     ("企业名称", ("企业名称", "name", "名称")),
-    ("统一社会信用代码", ("统一社会信用代码", "socialCreditCode", "scCode", "信用代码")),
+    (
+        "统一社会信用代码",
+        ("统一社会信用代码", "socialCreditCode", "scCode", "信用代码"),
+    ),
     ("法定代表人", ("法定代表人", "legalRepresentative", "法人代表")),
     ("企业类型", ("企业类型", "enterpriseType")),
     ("行业", ("行业", "industry", "industryName")),
@@ -55,8 +69,12 @@ def _base_kv(data: Mapping[str, Any]) -> Dict[str, str]:
 
 
 _RISK_DIMS = [
-    ("行政处罚", "penalties"), ("经营异常", "anomalies"), ("限制高消费", "restrictions"),
-    ("开庭公告", "court_hearings"), ("动产抵押", "mortgages"), ("严重违法", "serious_violations"),
+    ("行政处罚", "penalties"),
+    ("经营异常", "anomalies"),
+    ("限制高消费", "restrictions"),
+    ("开庭公告", "court_hearings"),
+    ("动产抵押", "mortgages"),
+    ("严重违法", "serious_violations"),
     ("知识产权出质", "ip_pledge"),
 ]
 
@@ -80,11 +98,42 @@ def _hearing_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     for h in (_risk(data).get("court_hearings") or [])[:20]:
         if not isinstance(h, dict):
             continue
-        rows.append({
-            "案由": str(_pick(h, "case_reason", "caseReason", "案由") or "-"),
-            "法院": str(_pick(h, "publishUnit", "court", "法院") or "-"),
-            "公告类型": str(_pick(h, "caseType", "公告类型") or "开庭公告"),
-        })
+        case_no = _pick(h, "caseNo", "caseNumber", "caCaseNo", "案号")
+        hearing_date = _pick(
+            h,
+            "hearingDate",
+            "courtTime",
+            "startDate",
+            "publishDate",
+            "noticeDate",
+            "开庭日期",
+            "发布日期",
+        )
+        rows.append(
+            {
+                "案号": str(case_no or "-"),
+                "案由": str(_pick(h, "case_reason", "caseReason", "案由") or "-"),
+                "法院": str(_pick(h, "publishUnit", "court", "法院") or "-"),
+                "相关主体": str(
+                    _pick(
+                        h,
+                        "enterpriseName",
+                        "partyName",
+                        "relatedEntity",
+                        "当事人",
+                        "相关主体",
+                    )
+                    or "-"
+                ),
+                "开庭/发布日期": str(hearing_date or "-"),
+                "公告类型": str(_pick(h, "caseType", "公告类型") or "开庭公告"),
+                "去重键状态": (
+                    "案号+日期可用"
+                    if case_no and hearing_date
+                    else "缺少案号或日期，无法逐案去重"
+                ),
+            }
+        )
     return rows
 
 
@@ -97,13 +146,24 @@ def _restriction_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
         applicant = r.get("efLimitedApplicant")
         if isinstance(applicant, list):
             applicant = "、".join(str(a) for a in applicant)
-        rows.append({
-            "案号": str(_pick(r, "efCaseNumber", "caseNo", "案号") or "-"),
-            "执行法院": str(_pick(r, "efExecutiveCourt", "court", "执行法院") or "-"),
-            "申请执行人": str(applicant or _pick(r, "applicant", "申请执行人") or "-"),
-            "被限制人": str(_pick(r, "efLimitedPersonName", "被限制人") or "-"),
-            "发布日期": str(_pick(r, "efLimitedPersonCasePublishTime", "publishDate", "发布日期") or "-"),
-        })
+        rows.append(
+            {
+                "案号": str(_pick(r, "efCaseNumber", "caseNo", "案号") or "-"),
+                "执行法院": str(
+                    _pick(r, "efExecutiveCourt", "court", "执行法院") or "-"
+                ),
+                "申请执行人": str(
+                    applicant or _pick(r, "applicant", "申请执行人") or "-"
+                ),
+                "被限制人": str(_pick(r, "efLimitedPersonName", "被限制人") or "-"),
+                "发布日期": str(
+                    _pick(
+                        r, "efLimitedPersonCasePublishTime", "publishDate", "发布日期"
+                    )
+                    or "-"
+                ),
+            }
+        )
     return rows
 
 
@@ -113,13 +173,19 @@ def _anomaly_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     for a in (_risk(data).get("anomalies") or [])[:20]:
         if not isinstance(a, dict):
             continue
-        rows.append({
-            "列入原因": str(_pick(a, "createReason", "reason", "列入原因") or "-"),
-            "决定机关": str(_pick(a, "createAuthority", "department", "决定机关") or "-"),
-            "列入日期": str(_pick(a, "createDate", "inDate", "列入日期") or "-"),
-            "移出日期": str(_pick(a, "removeDate", "outDate", "移出日期") or "未移出"),
-            "状态": "已移出" if (_pick(a, "removeDate", "outDate")) else "在列",
-        })
+        rows.append(
+            {
+                "列入原因": str(_pick(a, "createReason", "reason", "列入原因") or "-"),
+                "决定机关": str(
+                    _pick(a, "createAuthority", "department", "决定机关") or "-"
+                ),
+                "列入日期": str(_pick(a, "createDate", "inDate", "列入日期") or "-"),
+                "移出日期": str(
+                    _pick(a, "removeDate", "outDate", "移出日期") or "未移出"
+                ),
+                "状态": "已移出" if (_pick(a, "removeDate", "outDate")) else "在列",
+            }
+        )
     return rows
 
 
@@ -131,13 +197,21 @@ def _penalty_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
             continue
         if p.get("text") and len(p) <= 2:
             continue
-        rows.append({
-            "处罚类型": str(_pick(p, "punishType", "处罚类型") or "-"),
-            "处罚内容": str(_pick(p, "punishContent", "penaltyContent", "处罚内容") or "-"),
-            "决定机关": str(_pick(p, "punishAuthority", "department", "决定机关") or "-"),
-            "决定日期": str(_pick(p, "punishDecisionDate", "penaltyDate", "决定日期") or "-"),
-            "文号": str(_pick(p, "punishId", "penaltyNo", "文号") or "-"),
-        })
+        rows.append(
+            {
+                "处罚类型": str(_pick(p, "punishType", "处罚类型") or "-"),
+                "处罚内容": str(
+                    _pick(p, "punishContent", "penaltyContent", "处罚内容") or "-"
+                ),
+                "决定机关": str(
+                    _pick(p, "punishAuthority", "department", "决定机关") or "-"
+                ),
+                "决定日期": str(
+                    _pick(p, "punishDecisionDate", "penaltyDate", "决定日期") or "-"
+                ),
+                "文号": str(_pick(p, "punishId", "penaltyNo", "文号") or "-"),
+            }
+        )
     return rows
 
 
@@ -149,13 +223,15 @@ def _mortgage_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
             continue
         if m.get("text") and len(m) <= 2:
             continue
-        rows.append({
-            "登记编号": str(_pick(m, "mortgageRegNum", "登记编号") or "-"),
-            "抵押权人": str(_pick(m, "mortgagee", "抵押权人") or "-"),
-            "金额": str(_pick(m, "pledgeAmount", "金额") or "-"),
-            "状态": str(_pick(m, "status", "状态") or "-"),
-            "登记日期": str(_pick(m, "regDate", "登记日期") or "-"),
-        })
+        rows.append(
+            {
+                "登记编号": str(_pick(m, "mortgageRegNum", "登记编号") or "-"),
+                "抵押权人": str(_pick(m, "mortgagee", "抵押权人") or "-"),
+                "金额": str(_pick(m, "pledgeAmount", "金额") or "-"),
+                "状态": str(_pick(m, "status", "状态") or "-"),
+                "登记日期": str(_pick(m, "regDate", "登记日期") or "-"),
+            }
+        )
     return rows
 
 
@@ -163,7 +239,10 @@ def _operation_kv(data: Mapping[str, Any]) -> Dict[str, str]:
     op = _operation(data)
     scale = op.get("scale") or {}
     out: Dict[str, str] = {}
-    for label, keys in [("人员规模", ("staff", "人员规模", "enterpriseScale")), ("年营业额", ("turnover", "年营业额", "annualTurnover"))]:
+    for label, keys in [
+        ("人员规模", ("staff", "人员规模", "enterpriseScale")),
+        ("年营业额", ("turnover", "年营业额", "annualTurnover")),
+    ]:
         v = _pick(scale, *keys)
         if v not in (None, "", "-"):
             out[label] = str(v)
@@ -179,41 +258,51 @@ def _operation_kv(data: Mapping[str, Any]) -> Dict[str, str]:
 def _channel_kv(data: Mapping[str, Any]) -> Dict[str, str]:
     channel = _channel(data)
     out: Dict[str, str] = {}
-    for label, key in [("渠道总数", "channelCount"), ("供应商数", "supplierCount"),
-                       ("同行平均渠道", "peerAvgChannelCount"), ("渠道排名", "channelRank"),
-                       ("主要渠道类型", "topChannelType")]:
-        v = _pick(channel, key)
-        if v not in (None, "", "-"):
-            out[label] = str(v)
-    growth = channel.get("channelGrowthRate")
-    if growth:
-        out["渠道增长率"] = str(growth)
+    search_total = _i(channel.get("search_total"))
+    if search_total is not None:
+        out["渠道关联搜索返回数"] = str(search_total)
+    financial = channel.get("financialStat") or {}
+    sales = channel.get("salesStat") or {}
+    if isinstance(financial, dict) and financial.get("categoryCount") is not None:
+        out["财务分类样本数"] = str(financial.get("categoryCount"))
+    if isinstance(sales, dict) and sales.get("categoryCount") is not None:
+        out["销售分类样本数"] = str(sales.get("categoryCount"))
+    out["关系核验状态"] = "关联搜索结果未逐条确认与目标法人的关系" if out else "-"
     return out
 
 
 def _factory_kv(data: Mapping[str, Any]) -> Dict[str, str]:
     factory = _factory(data)
     out: Dict[str, str] = {}
-    # 概况字段
-    for label, key in [("工厂规模", "factoryScale"), ("工厂地址", "factoryAddress"),
-                       ("注册资本", "regCapital"), ("月产能", "monthlyProductionAmountValue"),
-                       ("账期风险", "accountPeriodRisk")]:
-        v = _pick(factory, key)
-        if v not in (None, "", "-"):
-            out[label] = str(v)
-    # 能力字段
-    for label, key in [("产线数", "assemblyLine"), ("普工人数", "boarderStaffNumber"),
-                       ("质检人数", "inspectionStaffNumber")]:
-        v = _pick(factory, key)
-        if v is not None:
-            out[label] = str(v)
-    # 产品统计
-    service_count = _i(factory.get("serviceBrandCount"))
-    if service_count:
-        out["服务品牌数"] = str(service_count)
+    if factory.get("factoryName"):
+        out["工厂记录名称"] = str(factory["factoryName"])
+    if factory.get("factoryNameId"):
+        out["工厂记录主体ID"] = str(factory["factoryNameId"])
+    if factory.get("factoryAddress"):
+        out["工厂地址"] = str(factory["factoryAddress"])
+    capacity_known = any(
+        _pick(factory, key) not in (None, "", "-")
+        for key in (
+            "assemblyLine",
+            "boarderStaffNumber",
+            "inspectionStaffNumber",
+            "monthlyProductionAmountValue",
+            "monthlyProductionAmountValue_caps",
+        )
+    ) or bool(factory.get("mainDeviceList"))
+    if capacity_known and factory.get("factoryScale"):
+        out["工厂规模标签"] = str(factory["factoryScale"])
     product_count = _i(factory.get("mainProductCount"))
-    if product_count:
-        out["主要产品数"] = str(product_count)
+    if product_count is not None:
+        out["主要产品统计数"] = str(product_count)
+    if not out and not capacity_known:
+        return {}
+    out["产能证据状态"] = (
+        "核心产能字段已返回"
+        if capacity_known
+        else "产线/人员/设备/月产能未返回，不评价产能"
+    )
+    out["主体关系状态"] = "需以统一社会信用代码或主体ID人工核验工厂记录归属"
     return out
 
 
@@ -239,14 +328,35 @@ def _recruitment_kv(data: Mapping[str, Any]) -> Dict[str, str]:
 # --------------------------------------------------------------------------- #
 # Payload assembly
 # --------------------------------------------------------------------------- #
-def build_direct_payload(enterprise: str, keyword_type: str, *, dry_run: bool, skills_root: str) -> Dict[str, Any]:
+def build_direct_payload(
+    enterprise: str, keyword_type: str, *, dry_run: bool, skills_root: str,
+    max_pages: Optional[int] = None,
+) -> Dict[str, Any]:
     # 1. Collect multi-source data (live MCP or cached reports)
-    data = orch.collect_direct(enterprise, keyword_type, dry_run=dry_run, skills_root=skills_root)
+    data = orch.collect_direct(
+        enterprise, keyword_type, dry_run=dry_run, skills_root=skills_root,
+        detail_max_pages=max_pages,
+    )
     meta = data.get("_meta") or {}
     resolved = meta.get("resolved") or {}
     canon = resolved.get("enterprise") or enterprise
     errors = meta.get("errors") or {}
     source_mode = "live_mcp" if meta.get("source") == "live" else "cached_reports"
+    identity_base = _base(data)
+    identity_name = str(_pick(identity_base, "企业名称", "name", "名称") or "").strip()
+    identity_code = str(
+        _pick(identity_base, "统一社会信用代码", "socialCreditCode", "信用代码") or ""
+    ).strip()
+    subject_confirmed = (
+        identity_name not in ("", "-")
+        and identity_code not in ("", "-")
+        and identity_name == canon
+    )
+    subject_reason = (
+        "工商基础信息中的企业名称和统一社会信用代码已返回"
+        if subject_confirmed
+        else "工商基础信息未返回可核验企业名称及统一社会信用代码"
+    )
 
     if errors:
         for k, msg in list(errors.items())[:5]:
@@ -254,14 +364,109 @@ def build_direct_payload(enterprise: str, keyword_type: str, *, dry_run: bool, s
 
     # 2. Cross-domain analysis
     cross = xa.analyze(data)
-    verdict = cross["verdict"]
-    scores = cross["specialty_scores"]
+    verdict = dict(cross["verdict"])
+    scores: Dict[str, Any] = {"items": [], "average": None}
+    factual_metric_labels = {
+        "上游风险评分",
+        "对外投资",
+        "行政处罚",
+        "注册资本",
+        "资本实缴率",
+        "融资轮次",
+        "产线数",
+        "普工人数",
+        "数据产品账期标签",
+        "在招岗位",
+        "限制高消费",
+        "开庭公告",
+        "经营异常",
+        "股东数量",
+        "成立年限",
+    }
+    cross["metrics"] = [
+        dict(item)
+        for item in cross["metrics"]
+        if item.get("label") in factual_metric_labels
+    ]
+    cross["section_specs"] = [
+        spec for spec in cross["section_specs"] if spec.get("key") != "se_specialty"
+    ]
+    cross["section_data"].pop("se_specialty", None)
+    cross["insights"] = [
+        item
+        for item in cross["insights"]
+        if "评分" not in str(item) and "观察值" not in str(item)
+    ]
+    verdict["specialty_average"] = None
+    judicial_exposure = bool(
+        (_i(_risk(data).get("court_hearings_total")) or 0)
+        or (_i(_risk(data).get("restrictions_total")) or 0)
+    )
+    risk_level_display = (
+        "上游原等级与司法记录冲突待核验"
+        if judicial_exposure
+        else (_risk(data).get("level") or "-")
+    )
+    verdict["key_concerns"] = [
+        concern
+        for concern in verdict.get("key_concerns", [])
+        if concern != "供货能力偏弱"
+    ]
+    if not subject_confirmed:
+        verdict.update(
+            level="主体未确认",
+            recommendation="仅作具名检索线索",
+            summary="工商名称与统一社会信用代码未同时确认；返回内容不得归属于目标主体，不作供应商准入评级。",
+            blockers=[],
+            key_concerns=["主体身份未确认"],
+        )
+    elif verdict.get("blockers"):
+        verdict.update(
+            level="不予综合评级",
+            recommendation="人工司法核验",
+            summary=f"发现需人工核验的司法或合规线索：{'、'.join(verdict['blockers'])}；不生成自定义综合或专项评分。",
+        )
+    else:
+        verdict.update(
+            level="事实观察（不评分）",
+            recommendation="逐项人工核验",
+            summary="报告仅整理公开事实和上游原始口径；缺少经验证模型、审计财务与同行分母，不生成自定义综合或专项评分。",
+        )
+    risk_errors = any(str(key).startswith("risk_") for key in errors)
+    evidence_gate = (
+        subject_confirmed and xa._risk_evidence_known(data) and not risk_errors
+    )
+    if not evidence_gate:
+        cross["insights"] = (
+            []
+            if not subject_confirmed
+            else [
+                item
+                for item in cross["insights"]
+                if not any(
+                    word in str(item.get("feature") or "")
+                    for word in ("风险", "司法", "诉讼")
+                )
+            ]
+        )
 
     # 3. Build core_analysis sections + data
     sections: List[Dict[str, Any]] = []
     core: Dict[str, Any] = {}
+    attempted_sections = 0
+
+    def _effective(value: Any) -> bool:
+        if value in (None, "", "-", [], {}):
+            return False
+        if isinstance(value, dict):
+            return any(_effective(v) for v in value.values())
+        if isinstance(value, list):
+            return any(_effective(v) for v in value)
+        return True
 
     def _add(spec: Dict[str, Any], body: Any) -> None:
+        nonlocal attempted_sections
+        attempted_sections += 1
         key = spec["key"]
         # radar carries its data in the chart spec (indicators/series), not the body
         if spec.get("kind") == "radar":
@@ -269,54 +474,64 @@ def build_direct_payload(enterprise: str, keyword_type: str, *, dry_run: bool, s
             if body:
                 core[key] = body
             return
-        if body not in (None, "", [], {}):
+        if _effective(body):
             sections.append(spec)
             core[key] = body
-
-    # verdict gauge — paired with radar to avoid whitespace
-    if scores.get("average") is not None:
-        _add({"key": "se_verdict_gauge", "title": "供应商综合评分", "kind": "gauge",
-              "chart": {"value_key": "供应商综合评分", "level_key": "准入结论", "max": 100},
-              "note": f"准入结论：{verdict['recommendation']}",
-              "pair_with": "se_radar"},
-             {"供应商综合评分": scores["average"], "准入结论": verdict["level"]})
-
-    # specialty radar — paired with the verdict gauge above
-    valid_scores = [(s["label"], s["score"]) for s in scores["items"] if s["score"] is not None]
-    if len(valid_scores) >= 3:
-        dim_names = " / ".join(l for l, _ in valid_scores)
-        _add({"key": "se_radar", "title": "供应商专项评分雷达", "kind": "radar",
-              "chart": {"indicators": [{"name": l, "max": 100} for l, _ in valid_scores],
-                        "series": [{"name": "专项评分", "value": [v for _, v in valid_scores]}]},
-              "note": f"跨维度交叉评分（{len(valid_scores)} 维）：{dim_names}"},
-             {})
 
     # 供应商概况（factory profile + base）
     factory_kv = _factory_kv(data)
     base_kv = _base_kv(data)
     profile_kv = {**factory_kv, **base_kv}
     if profile_kv:
-        _add({"key": "se_profile", "title": "供应商概况", "kind": "kv",
-              "note": "工厂概况 + 工商基础信息"}, profile_kv)
+        _add(
+            {
+                "key": "se_profile",
+                "title": "供应商概况",
+                "kind": "kv",
+                "note": "工厂概况 + 工商基础信息",
+            },
+            profile_kv,
+        )
 
-    # 供货能力（capabilities + product_stats）
-    capabilities_kv = {
-        "产线数": str(_pick(_factory(data), "assemblyLine") or "-"),
-        "普工人数": str(_pick(_factory(data), "boarderStaffNumber") or "-"),
-        "质检人数": str(_pick(_factory(data), "inspectionStaffNumber") or "-"),
-        "主要设备": "、".join(str(d) for d in (_factory(data).get("mainDeviceList") or []) if d) or "-",
-        "管理体系认证": str(_pick(_factory(data), "managementSystemCertification") or "-"),
-        "月产能": str(_pick(_factory(data), "monthlyProductionAmountValue_caps") or "-"),
-        "服务品牌数": str(_i(_factory(data).get("serviceBrandCount")) or "-"),
-        "主要产品数": str(_i(_factory(data).get("mainProductCount")) or "-"),
+    # 工厂平台字段仅作线索，不能替代经核验的供货能力。
+    factory_clues = {
+        "产线数": _pick(_factory(data), "assemblyLine"),
+        "普工人数": _pick(_factory(data), "boarderStaffNumber"),
+        "质检人数": _pick(_factory(data), "inspectionStaffNumber"),
+        "主要设备": "、".join(
+            str(d)
+            for d in (_factory(data).get("mainDeviceList") or [])
+            if _effective(d)
+        ),
+        "管理体系认证": _pick(_factory(data), "managementSystemCertification"),
+        "月产能": _pick(_factory(data), "monthlyProductionAmountValue_caps"),
+        "服务品牌数": _i(_factory(data).get("serviceBrandCount")),
+        "主要产品数": _i(_factory(data).get("mainProductCount")),
     }
-    _add({"key": "se_capabilities", "title": "供货能力", "kind": "kv",
-          "note": "工厂产能/设备/产线 + 产品统计"}, capabilities_kv)
+    capabilities_kv = {
+        label: str(value) for label, value in factory_clues.items() if _effective(value)
+    }
+    _add(
+        {
+            "key": "se_factory_platform_clues",
+            "title": "工厂平台返回线索",
+            "kind": "kv",
+            "note": "仅列工厂平台实际返回字段；字段归属及产能口径需人工核验，不据此宣称供货能力或产能匹配",
+        },
+        capabilities_kv,
+    )
 
     # 渠道分析
     channel_kv = _channel_kv(data)
-    _add({"key": "se_channel", "title": "渠道分析", "kind": "kv",
-          "note": "渠道总数/供应商数/同行对比/渠道排名"}, channel_kv)
+    _add(
+        {
+            "key": "se_channel",
+            "title": "渠道关联搜索事实",
+            "kind": "kv",
+            "note": "渠道关联搜索/分类统计；与目标法人的关系未逐条确认，不作领先或覆盖能力结论",
+        },
+        channel_kv,
+    )
 
     # cross-analysis sections (shareholders, investments, specialty matrix)
     for spec in cross["section_specs"]:
@@ -325,57 +540,159 @@ def build_direct_payload(enterprise: str, keyword_type: str, *, dry_run: bool, s
     # risk gauge + risk dimension counts — paired to avoid whitespace
     risk_score = _i(_risk(data).get("score"))
     if risk_score is not None:
-        _add({"key": "se_risk_gauge", "title": "综合风险评分", "kind": "gauge",
-              "chart": {"value_key": "风险评分", "level_key": "风险等级", "max": 100},
-              "note": "风险洞察综合评分（越低越好）",
-              "pair_with": "se_risk_dims"},
-             {"风险评分": risk_score, "风险等级": _risk(data).get("level") or "-"})
+        _add(
+            {
+                "key": "se_risk_gauge",
+                "title": "综合风险评分",
+                "kind": "gauge",
+                "chart": {"value_key": "风险评分", "level_key": "风险等级", "max": 100},
+                "note": "上游风险评分原始口径；若与司法事件数量冲突，不作为低风险背书",
+                "pair_with": "se_risk_dims",
+            },
+            {"风险评分": risk_score, "风险等级": risk_level_display},
+        )
     risk_rows = _risk_dim_rows(data)
-    _add({"key": "se_risk_dims", "title": "风险维度统计", "kind": "table",
-          "note": "各风险维度记录数（供应商合规核查）",
-          "columns": [("风险维度", "风险维度"), ("记录数", "记录数")]}, risk_rows)
+    _add(
+        {
+            "key": "se_risk_dims",
+            "title": "风险维度统计",
+            "kind": "table",
+            "note": "各风险维度记录数（供应商合规核查）",
+            "columns": [("风险维度", "风险维度"), ("记录数", "记录数")],
+        },
+        risk_rows,
+    )
 
     # --- 风险案件明细（供应商评估核心：展开具体案件，而非只给数字）---
     hearing_rows = _hearing_rows(data)
-    _add({"key": "se_hearings", "title": "开庭公告明细", "kind": "table",
-          "note": f"共 {len(_risk(data).get('court_hearings') or [])} 条开庭公告（展示前 20 条），案由分布反映诉讼焦点",
-          "columns": [("案由", "案由"), ("法院", "法院"), ("公告类型", "公告类型")]}, hearing_rows)
+    _add(
+        {
+            "key": "se_hearings",
+            "title": "开庭公告明细",
+            "kind": "table",
+            "note": f"报告总量 {_risk(data).get('court_hearings_total') if _risk(data).get('court_hearings_total') is not None else '未知'} 条（当前展示 {len(hearing_rows)} 条）；保留上游案号/日期/主体用于人工去重，缺少案号或日期的记录无法逐案去重",
+            "columns": [
+                ("案号", "案号"),
+                ("案由", "案由"),
+                ("法院", "法院"),
+                ("相关主体", "相关主体"),
+                ("开庭/发布日期", "开庭/发布日期"),
+                ("公告类型", "公告类型"),
+                ("去重键状态", "去重键状态"),
+            ],
+        },
+        hearing_rows,
+    )
 
     restriction_rows = _restriction_rows(data)
-    _add({"key": "se_restrictions", "title": "限制高消费明细", "kind": "table",
-          "note": "限制高消费是供应商评估重大风险信号，需核查执行标的与履行情况",
-          "columns": [("案号", "案号"), ("执行法院", "执行法院"), ("申请执行人", "申请执行人"), ("被限制人", "被限制人"), ("发布日期", "发布日期")]}, restriction_rows)
+    _add(
+        {
+            "key": "se_restrictions",
+            "title": "限制高消费明细",
+            "kind": "table",
+            "note": "限制高消费是供应商评估重大风险信号，需核查执行标的与履行情况",
+            "columns": [
+                ("案号", "案号"),
+                ("执行法院", "执行法院"),
+                ("申请执行人", "申请执行人"),
+                ("被限制人", "被限制人"),
+                ("发布日期", "发布日期"),
+            ],
+        },
+        restriction_rows,
+    )
 
     anomaly_rows = _anomaly_rows(data)
-    _add({"key": "se_anomalies", "title": "经营异常明细", "kind": "table",
-          "note": "经营异常名录记录（如通过住所无法联系），核查是否已移出",
-          "columns": [("列入原因", "列入原因"), ("决定机关", "决定机关"), ("列入日期", "列入日期"), ("移出日期", "移出日期"), ("状态", "状态")]}, anomaly_rows)
+    _add(
+        {
+            "key": "se_anomalies",
+            "title": "经营异常明细",
+            "kind": "table",
+            "note": "经营异常名录记录（如通过住所无法联系），核查是否已移出",
+            "columns": [
+                ("列入原因", "列入原因"),
+                ("决定机关", "决定机关"),
+                ("列入日期", "列入日期"),
+                ("移出日期", "移出日期"),
+                ("状态", "状态"),
+            ],
+        },
+        anomaly_rows,
+    )
 
     penalty_rows = _penalty_rows(data)
-    _add({"key": "se_penalties", "title": "行政处罚明细", "kind": "table",
-          "note": "行政处罚记录，核查违法事实与处罚影响",
-          "columns": [("处罚类型", "处罚类型"), ("处罚内容", "处罚内容"), ("决定机关", "决定机关"), ("决定日期", "决定日期"), ("文号", "文号")]}, penalty_rows)
+    _add(
+        {
+            "key": "se_penalties",
+            "title": "行政处罚明细",
+            "kind": "table",
+            "note": "行政处罚记录，核查违法事实与处罚影响",
+            "columns": [
+                ("处罚类型", "处罚类型"),
+                ("处罚内容", "处罚内容"),
+                ("决定机关", "决定机关"),
+                ("决定日期", "决定日期"),
+                ("文号", "文号"),
+            ],
+        },
+        penalty_rows,
+    )
 
     mortgage_rows = _mortgage_rows(data)
-    _add({"key": "se_mortgages", "title": "动产抵押明细", "kind": "table",
-          "note": "动产抵押反映资产质押状况",
-          "columns": [("登记编号", "登记编号"), ("抵押权人", "抵押权人"), ("金额", "金额"), ("状态", "状态"), ("登记日期", "登记日期")]}, mortgage_rows)
+    _add(
+        {
+            "key": "se_mortgages",
+            "title": "动产抵押明细",
+            "kind": "table",
+            "note": "动产抵押反映资产质押状况",
+            "columns": [
+                ("登记编号", "登记编号"),
+                ("抵押权人", "抵押权人"),
+                ("金额", "金额"),
+                ("状态", "状态"),
+                ("登记日期", "登记日期"),
+            ],
+        },
+        mortgage_rows,
+    )
 
     # operation
     op_kv = _operation_kv(data)
-    _add({"key": "se_operation", "title": "经营规模与资本运作", "kind": "kv",
-          "note": "人员规模 / 营业额 / 融资 / 上榜记录"}, op_kv)
+    _add(
+        {
+            "key": "se_operation",
+            "title": "经营规模与资本运作",
+            "kind": "kv",
+            "note": "人员规模 / 营业额 / 融资 / 上榜记录",
+        },
+        op_kv,
+    )
 
     # recruitment
     rec_kv = _recruitment_kv(data)
-    _add({"key": "se_recruitment", "title": "招聘与扩张活跃度", "kind": "kv",
-          "note": "招聘活跃度反映企业经营动能"}, rec_kv)
+    _add(
+        {
+            "key": "se_recruitment",
+            "title": "招聘公开统计",
+            "kind": "kv",
+            "note": "招聘平台公开字段事实统计；“当前/近三月”为上游窗口标签，未返回精确观察起止日期，不能单独证明经营动能、产能或履约能力",
+        },
+        rec_kv,
+    )
 
     # 4. Metrics (凑 4 的倍数)
     metrics: List[Dict[str, Any]] = list(cross["metrics"])
-    # 确保是 4 的倍数，不足则补空
-    while len(metrics) % 4 != 0:
-        metrics.append({"label": "-", "value": "-", "hint": ""})
+    for item in metrics:
+        if item.get("label") == "上游风险评分":
+            item["hint"] = "上游原始口径；若与司法事件数量冲突，不作为低风险背书"
+            if judicial_exposure:
+                item.pop("delta", None)
+        elif item.get("label") in ("产线数", "普工人数"):
+            item["hint"] = "工厂平台实际返回字段；归属及口径待核验"
+        elif item.get("label") == "数据产品账期标签":
+            item["hint"] = "上游数据产品原始标签；不代表财务稳健或账期可控"
+        elif item.get("label") == "在招岗位":
+            item["hint"] = "招聘平台公开数量；不代表产能或履约能力"
 
     # 5. Insights (cross-domain first, then can supplement)
     insights: List[Dict[str, Any]] = list(cross["insights"])
@@ -384,85 +701,188 @@ def build_direct_payload(enterprise: str, keyword_type: str, *, dry_run: bool, s
     rep_records: List[Dict[str, str]] = []
     invests = _investments(data)
     inv_total = _risk(data).get("investments_total") or len(invests)
-    cancelled = [i for i in invests if "注销" in str(_pick(i, "operStatus", "经营状态", "状态") or "")]
+    cancelled = [
+        i
+        for i in invests
+        if "注销" in str(_pick(i, "operStatus", "经营状态", "状态") or "")
+    ]
     if inv_total:
-        rep_records.append({"维度": "对外投资", "关键记录": f"{inv_total} 家关联企业" + (f"（其中 {len(cancelled)} 家已注销）" if cancelled else "")})
+        rep_records.append(
+            {
+                "维度": "对外投资",
+                "关键记录": f"{inv_total} 家关联企业"
+                + (f"（其中 {len(cancelled)} 家已注销）" if cancelled else ""),
+            }
+        )
     ls = xa._litigation_summary(data)
     if ls["executed"]:
-        rep_records.append({"维度": "执行风险", "关键记录": f"被执行记录 {ls['executed']} 条"})
+        rep_records.append(
+            {"维度": "执行风险", "关键记录": f"被执行记录 {ls['executed']} 条"}
+        )
     risk_score = _i(_risk(data).get("score"))
     if risk_score is not None:
-        rep_records.append({"维度": "风险评级", "关键记录": f"风险评分 {risk_score}（{_risk(data).get('level') or '-'}）"})
-    supply = xa.score_supply_capability(data)
-    if supply is not None:
-        rep_records.append({"维度": "供货能力", "关键记录": f"供货能力评分 {supply:.0f}"})
+        rep_records.append(
+            {
+                "维度": "风险评级",
+                "关键记录": f"上游风险评分 {risk_score}（{risk_level_display}）",
+            }
+        )
     channel_count = _i(_channel(data).get("channelCount"))
     if channel_count:
-        rep_records.append({"维度": "渠道覆盖", "关键记录": f"渠道总数 {channel_count}"})
+        rep_records.append(
+            {"维度": "渠道覆盖", "关键记录": f"渠道总数 {channel_count}"}
+        )
     assembly_line = _i(_factory(data).get("assemblyLine"))
     if assembly_line:
         rep_records.append({"维度": "产能规模", "关键记录": f"产线数 {assembly_line}"})
     hearing_total = _risk(data).get("court_hearings_total")
     if hearing_total:
-        rep_records.append({"维度": "诉讼记录", "关键记录": f"开庭公告 {hearing_total} 条"})
+        rep_records.append(
+            {"维度": "诉讼记录", "关键记录": f"开庭公告 {hearing_total} 条"}
+        )
     if not rep_records:
         rep_records.append({"维度": "数据状态", "关键记录": "多维数据覆盖，详见各章节"})
 
     # 7. Abstract & summary
-    n_sources = sum(1 for d in (data.get("enterprise"), data.get("risk"), data.get("operation"), data.get("channel"), data.get("factory"), data.get("recruitment")) if d)
+    n_sources = sum(
+        1
+        for d in (
+            data.get("enterprise"),
+            data.get("risk"),
+            data.get("operation"),
+            data.get("channel"),
+            data.get("factory"),
+            data.get("recruitment"),
+        )
+        if _effective(d)
+    )
     abstract_parts = [
         f"本报告以「{canon}」为评估对象，直接聚合工商、风险、经营、渠道、工厂、招聘 {n_sources} 大数据源的多维原始数据，",
     ]
-    if scores.get("average") is not None:
-        abstract_parts.append(f"供应商综合评分 {scores['average']}（结论：{verdict['level']}）。")
     if verdict["blockers"]:
-        abstract_parts.append(f"发现 {len(verdict['blockers'])} 项重大风险阻断项：{'、'.join(verdict['blockers'])}。")
+        abstract_parts.append(
+            f"发现 {len(verdict['blockers'])} 项重大风险阻断项：{'、'.join(verdict['blockers'])}。"
+        )
     if verdict["key_concerns"]:
         abstract_parts.append(f"需关注：{'、'.join(verdict['key_concerns'][:3])}。")
     abstract_parts.append(verdict["summary"])
     abstract = "".join(abstract_parts)
 
+    if not subject_confirmed:
+        sections = []
+        core = {}
+        metrics = []
+        insights = []
+        rep_records = [
+            {
+                "维度": "检索状态",
+                "关键记录": "仅形成具名检索线索；工商名称与统一社会信用代码未同时确认，所有返回记录归属待核验",
+            }
+        ]
+        abstract = (
+            f"本报告仅记录对关键词「{enterprise}」的具名检索线索。"
+            "工商名称与统一社会信用代码未同时确认，返回的风险、投资、经营、渠道、工厂及招聘记录不得归属于目标主体；不作供应商准入评级。"
+        )
+
+    # Upstream risk scores may remain as explicitly sourced factual metrics,
+    # but must never be promoted into this report's own gauge or "综合" chart.
+    gauge_keys = {
+        str(section.get("key") or "")
+        for section in sections
+        if section.get("kind") == "gauge"
+    }
+    if gauge_keys:
+        sections = [section for section in sections if section.get("kind") != "gauge"]
+        for key in gauge_keys:
+            core.pop(key, None)
+        attempted_sections = max(0, attempted_sections - len(gauge_keys))
+
     # quality report
-    populated = sum(1 for s in sections if core.get(s["key"]) not in (None, "", [], {}))
+    populated = sum(
+        1
+        for s in sections
+        if s.get("kind") == "radar" or _effective(core.get(s["key"]))
+    )
     quality = {
-        "total_sections": len(sections),
+        "total_sections": attempted_sections,
         "populated_sections": populated,
-        "empty_sections": len(sections) - populated,
-        "coverage_pct": round(populated / max(1, len(sections)) * 100),
+        "empty_sections": attempted_sections - populated,
+        "coverage_pct": round(populated / max(1, attempted_sections) * 100),
         "data_sources": n_sources,
         "cross_insights": len(insights),
     }
 
-    return {
+    report = {
         "report_type": REPORT_TYPE,
         "title": f"{canon} 供应商评估报告",
         "banner": BANNER,
-        "subject": {"enterprise": canon, "match_raw": enterprise, "resolved": resolved.get("resolved", False),
-                    "resolve_reason": resolved.get("reason", "")},
+        "subject": {
+            "enterprise": canon,
+            "match_raw": enterprise,
+            "resolved": subject_confirmed,
+            "resolve_reason": subject_reason,
+        },
         "abstract": abstract,
         "summary": abstract,
-        "executive_summary": [verdict["summary"]] + [i["interpretation"] for i in insights[:4]],
+        "executive_summary": [verdict["summary"]]
+        + [i["interpretation"] for i in insights[:4]],
         "verdict": verdict,
         "specialty_scores": scores,
         "metrics": metrics,
         "caliber": {
             "match_target": canon,
-            "match_type": f"供应商评估（直接聚合 6 个 MCP：工商/风险/经营/渠道/工厂/招聘）",
+            "match_type": "供应商评估（直接聚合 6 个 MCP：工商/风险/经营/渠道/工厂/招聘）",
             "data_scope": f"覆盖 {n_sources}/6 大数据源，{len(sections)} 个明细章节，{len(insights)} 条跨维度洞察",
-            "products": ["企业大数据", "企业风险洞察", "企业经营分析", "渠道洞察", "工厂洞察", "招聘大数据"],
-            "limit": "供应商评估结论基于多维公开数据交叉分析；建议结合实地考察与财务审计综合决策。",
+            "products": [
+                "企业大数据",
+                "企业风险洞察",
+                "企业经营分析",
+                "渠道洞察",
+                "工厂洞察",
+                "招聘大数据",
+            ],
+            "limit": "未确认主体时所有返回仅为具名检索线索；已确认主体时也仅整理公开事实，不生成自定义评分；工厂平台字段、渠道关系及目标行业适用性需逐条核验，并结合实地考察与财务审计决策。",
         },
         "core_analysis": {**core, "sections": sections},
         "representative_records": rep_records,
         "insights": insights,
         "data_source": {
             "mcp_server": "6 MCP（工商/风险/经营/渠道/工厂/招聘）",
-            "mcp_servers": ["enterprise-mcp-server", "enterprise-risk-mcp-server", "enterprise-operation-mcp-server",
-                            "factory-channel-mcp-server", "factory-insight-mcp-server", "recruitment-mcp-server"],
+            "mcp_servers": [
+                "enterprise-mcp-server",
+                "enterprise-risk-mcp-server",
+                "enterprise-operation-mcp-server",
+                "factory-channel-mcp-server",
+                "factory-insight-mcp-server",
+                "recruitment-mcp-server",
+            ],
             "mode": source_mode,
             "dry_run": dry_run,
-            "generated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "generated_at": dt.datetime.now()
+            .astimezone()
+            .isoformat(timespec="seconds"),
             "quality_report": quality,
             "tool_errors": list(errors.keys()) if errors else [],
         },
     }
+    if meta.get("source") == "live":
+        from common import attach_pagination
+
+        report = attach_pagination(report, meta.get("pagination_payloads") or {})
+        call_usage = meta.get("call_usage")
+        if isinstance(call_usage, dict) and call_usage:
+            report["data_source"]["call_usage"] = call_usage
+        if max_pages is None:
+            budget_note = (
+                "明细接口默认按单页预算采集（每接口仅请求第 1 页，该页同时用于分析与上游 total 发现，不重复计费）；"
+                "如需更多明细页，请先规划所需结论与数据维度，再用 --max-pages N 明确页数预算；"
+                "若预算不足以支撑关键结论，必须说明证据缺口与预计所需额外页数，不得悄悄降级结论或扩大计费范围。"
+            )
+            report["abstract"] += budget_note
+            report["summary"] += budget_note
+            report["caliber"]["limit"] += budget_note
+        for note in (meta.get("schema_limited") or {}).values():
+            report["abstract"] += note
+            report["summary"] += note
+            report["caliber"]["limit"] += note
+    return report
