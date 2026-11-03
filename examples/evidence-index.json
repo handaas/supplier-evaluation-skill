@@ -17,7 +17,7 @@
         "business-review.json": "e3e0128becd88f19898d3a30ef2fc17f5a88ba08dba0a87ece62c59337ed147e",
         "browser-check.json": "6519c078c9f159f37ab9708e8c65e49f65a3552a95b799ebfd800fd0be307294"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/09-luxshare-prescreen-gap-register.md"
+      "audit_record": "../test-records/live-replaced-20261027/09-luxshare-prescreen-gap-register.md"
     },
     {
       "skill": "supplier-evaluation-skill",
@@ -35,7 +35,7 @@
         "business-review.json": "5ef358deb6ce862b3b24a681407c5eddd6a377e5d3c31842d44a43ce310ab958",
         "browser-check.json": "478a220b0fbc056910f0c6c5dae14e5cdbbb2bd68cabfefd9eea7e1addfe788c"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/10-byd-expansion-signal-audit.md"
+      "audit_record": "../test-records/live-replaced-20261027/10-byd-expansion-signal-audit.md"
     },
     {
       "skill": "supplier-evaluation-skill",
@@ -53,7 +53,7 @@
         "business-review.json": "31c16ceb48a2b3ac04fcff436698601ed3f269a36fe7b28f7056e8ac124b7ae7",
         "browser-check.json": "fa7b609ebeb0ba82b7fbdb3bed7e84581ce514dc8e80f789d121ccc22a2aac5a"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/11-suning-risk-channel-index.md"
+      "audit_record": "../test-records/live-replaced-20261027/11-suning-risk-channel-index.md"
     },
     {
       "skill": "supplier-evaluation-skill",
@@ -71,7 +71,7 @@
         "business-review.json": "c785c3e1116bdd71fe2953f2ed0fec8d84d4c0095359f2eeda7f8ded8924daf2",
         "browser-check.json": "41304b4f150a6ab7e16bf515689360dae32238f7528f176cfc0ae5061ee8935b"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/03-channel-coverage.md"
+      "audit_record": "../test-records/live-replaced-20261027/03-channel-coverage.md"
     }
   ]
 }
