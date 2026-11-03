@@ -1,0 +1,960 @@
+[
+  {
+    "tool": "recruitment_trend",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 0.596,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingCurrentCount",
+        "value": 5961.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 5961.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 4051
+      },
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 4882
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 7317.462380783
+      }
+    ],
+    "response_sha256": "be70343e9a54487cde4b5a8a34df32f152b92115ffb7134c283fada0c19db822"
+  },
+  {
+    "tool": "recruitment_employer_profile",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 0.598,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "benefitList",
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords",
+      "recruitingTypes",
+      "truncatedFields"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 4882
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 7317.462380783
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 5961.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 5961.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 4051
+      },
+      {
+        "path": "truncatedFields.recruitingCities.total",
+        "value": 333
+      },
+      {
+        "path": "truncatedFields.recruitingCities.returned",
+        "value": 50
+      }
+    ],
+    "response_sha256": "2afecfbdefe0134984ba91bb8e13baa91c44a3546efcfcc5718cd360b6ea215c"
+  },
+  {
+    "tool": "channel_insight_channel_search",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.031,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 4,
+    "reported_total": 4,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].regCapital.value",
+        "value": 100000.0
+      },
+      {
+        "path": "resultList[1].regCapital.value",
+        "value": 1000000.0
+      },
+      {
+        "path": "resultList[2].regCapital.value",
+        "value": 4000000.0
+      },
+      {
+        "path": "resultList[3].regCapital.value",
+        "value": 2000000.0
+      },
+      {
+        "path": "total",
+        "value": 4
+      }
+    ],
+    "response_sha256": "a2a5d614c77556577cbb8d045e9f8b5f44596f6a0ae012e957d6961c05071802"
+  },
+  {
+    "tool": "channel_insight_channel_analysis",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.032,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "financialStat",
+      "salesStat"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "financialStat.categoryCount",
+        "value": 0
+      },
+      {
+        "path": "salesStat.categoryCount",
+        "value": 0
+      }
+    ],
+    "response_sha256": "9088e941929112c8ca49b4c57fbba87f290efbda97502d3266581b3e70b4b2b4"
+  },
+  {
+    "tool": "factory_insight_factory_profile",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.069,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "accountPeriodRisk",
+      "factoryAddress",
+      "factoryScale",
+      "factoryTypeList",
+      "foundTime",
+      "name",
+      "nameId",
+      "regCapital"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "regCapital.value",
+        "value": 7606439151.0
+      }
+    ],
+    "response_sha256": "f0f8c2437de4588c476ec01a65e833a7266c18b3350b60d1121eb01d58d7a97c"
+  },
+  {
+    "tool": "factory_insight_factory_capabilities",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.071,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "enterpriseCertification"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "cf1b5c7ccb9a38e6c1598c3325b80eb56920ed285db3ada4c59e41d602e20ad1"
+  },
+  {
+    "tool": "factory_insight_factory_product_stats",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.074,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "mainProductCount",
+      "productCategoriesStatInfo"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "mainProductCount",
+        "value": 70
+      },
+      {
+        "path": "productCategoriesStatInfo[0].value",
+        "value": 11
+      }
+    ],
+    "response_sha256": "421c2f15363dbbe9833f9dea132195c903311d9def42fd4234d7396f4f32ae39"
+  },
+  {
+    "tool": "operation_insight_business_scale",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.279,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "annualTurnover",
+      "enterpriseScale"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "7c05a4d3bcd474b7963faa2bcced12f8a2be0b1d908d323dfe3d894da56b4354"
+  },
+  {
+    "tool": "operation_insight_financing_info",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.283,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "fpFinancingCount",
+      "fpFinancingList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "fpFinancingCount",
+        "value": 10
+      }
+    ],
+    "response_sha256": "1a732125755d1ce814d3c1017d904109ade69e5e2b9dc8594cbde95a58940809"
+  },
+  {
+    "tool": "operation_insight_company_trends",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.285,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "isStaffExpandIn6Month",
+      "isStaffExpandIn12Month",
+      "isCancelSubsidiaryIn3Month",
+      "isExpandNewCityIn3Month",
+      "isExpandNewCityIn6Month",
+      "isExpandNewCityIn12Month",
+      "qualificationIn6MonthList",
+      "qualificationIn12MonthList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "isStaffExpandIn6Month",
+        "value": 1
+      },
+      {
+        "path": "isStaffExpandIn12Month",
+        "value": 1
+      },
+      {
+        "path": "isCancelSubsidiaryIn3Month",
+        "value": 1
+      },
+      {
+        "path": "isExpandNewCityIn3Month",
+        "value": 1
+      },
+      {
+        "path": "isExpandNewCityIn6Month",
+        "value": 1
+      },
+      {
+        "path": "isExpandNewCityIn12Month",
+        "value": 1
+      }
+    ],
+    "response_sha256": "f8aaf2e736224594e78541c0f736b01870bf7a739983bbeddc87da125b5483ee"
+  },
+  {
+    "tool": "operation_insight_enterprise_rankings",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 10
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.287,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 77,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].rankingListYear",
+        "value": 2024
+      },
+      {
+        "path": "resultList[0].rank",
+        "value": 277
+      },
+      {
+        "path": "resultList[1].rankingListYear",
+        "value": 2024
+      },
+      {
+        "path": "resultList[1].rank",
+        "value": 73
+      },
+      {
+        "path": "resultList[2].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[2].rank",
+        "value": 278
+      },
+      {
+        "path": "resultList[3].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[3].rank",
+        "value": 81
+      },
+      {
+        "path": "resultList[4].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[4].rank",
+        "value": 82
+      },
+      {
+        "path": "total",
+        "value": 77
+      }
+    ],
+    "response_sha256": "9a2e390d80931db5112633f17816a2e25ff5fe0a51282c0422bf0e5ee52f5c51"
+  },
+  {
+    "tool": "enterprise_get_enterprise_base_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "美的集团股份有限公司"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.907,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "base_info",
+      "desc",
+      "tag"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "base_info.regCapital.value",
+        "value": 7606439151.0
+      },
+      {
+        "path": "tag.hasStock",
+        "value": 1
+      },
+      {
+        "path": "tag.isAnomaly",
+        "value": 0
+      },
+      {
+        "path": "tag.isHighTechEnterprise",
+        "value": 0
+      },
+      {
+        "path": "tag.isTopEnterprise",
+        "value": 1
+      }
+    ],
+    "response_sha256": "1f6881b0a6eb66ee4b8cc83c62892792a663f6cf327738049e6f295017c9f540"
+  },
+  {
+    "tool": "enterprise_get_enterprise_holder_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "美的集团股份有限公司"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.917,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "holderList",
+      "stockHolderList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "holderList[0].payAmount.value",
+        "value": 598500000.0
+      },
+      {
+        "path": "holderList[0].ratio",
+        "value": 0.6297717988
+      },
+      {
+        "path": "holderList[0].subscriptionDetail.amount",
+        "value": 2244375000.0
+      },
+      {
+        "path": "holderList[1].payAmount.value",
+        "value": 121800000.0
+      },
+      {
+        "path": "holderList[1].ratio",
+        "value": 0.0886415645
+      },
+      {
+        "path": "holderList[1].subscriptionDetail.amount",
+        "value": 315900000.0
+      },
+      {
+        "path": "holderList[2].payAmount.value",
+        "value": 36000000.0
+      },
+      {
+        "path": "holderList[2].ratio",
+        "value": 0.0384395427
+      },
+      {
+        "path": "holderList[2].subscriptionDetail.amount",
+        "value": 136990492.0
+      },
+      {
+        "path": "holderList[3].payAmount.value",
+        "value": 31200000.0
+      },
+      {
+        "path": "holderList[3].ratio",
+        "value": 0.0328302091
+      },
+      {
+        "path": "holderList[3].subscriptionDetail.amount",
+        "value": 117000000.0
+      },
+      {
+        "path": "holderList[4].payAmount.value",
+        "value": 30000000.0
+      },
+      {
+        "path": "holderList[4].ratio",
+        "value": 0.0315675087
+      },
+      {
+        "path": "holderList[4].subscriptionDetail.amount",
+        "value": 112500000.0
+      },
+      {
+        "path": "stockHolderList[0].shareHolding",
+        "value": 2169000000.0
+      },
+      {
+        "path": "stockHolderList[0].shareHoldingRatio",
+        "value": 0.2849
+      },
+      {
+        "path": "stockHolderList[1].shareHolding",
+        "value": 893000000.0
+      },
+      {
+        "path": "stockHolderList[1].shareHoldingRatio",
+        "value": 0.1174
+      },
+      {
+        "path": "stockHolderList[2].shareHolding",
+        "value": 651000000.0
+      },
+      {
+        "path": "stockHolderList[2].shareHoldingRatio",
+        "value": 0.0855
+      },
+      {
+        "path": "stockHolderList[3].shareHolding",
+        "value": 207000000.0
+      },
+      {
+        "path": "stockHolderList[3].shareHoldingRatio",
+        "value": 0.0272
+      },
+      {
+        "path": "stockHolderList[4].shareHolding",
+        "value": 142000000.0
+      },
+      {
+        "path": "stockHolderList[4].shareHoldingRatio",
+        "value": 0.0186
+      }
+    ],
+    "response_sha256": "ef8fb2be79b9a1671f9620325d8d0d9a5c2a5ba411f377b97fa834d006bcd53c"
+  },
+  {
+    "tool": "enterprise_get_enterprise_invest_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "美的集团股份有限公司"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.918,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 50,
+    "reported_total": 134,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[0].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[0].regCapital.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[0].subscriptionAmount.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[1].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[1].regCapital.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[1].subscriptionAmount.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[2].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[2].regCapital.value",
+        "value": 420000000.0
+      },
+      {
+        "path": "resultList[2].subscriptionAmount.value",
+        "value": 420000000.0
+      },
+      {
+        "path": "resultList[3].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[3].regCapital.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[3].subscriptionAmount.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[4].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[4].regCapital.value",
+        "value": 325000000.0
+      },
+      {
+        "path": "resultList[4].subscriptionAmount.value",
+        "value": 325000000.0
+      },
+      {
+        "path": "total",
+        "value": 134
+      }
+    ],
+    "response_sha256": "bba54e38284f5cff419069c359b4408b7a4bf38aea5c6eee6ae6da9f5692cd16"
+  },
+  {
+    "tool": "enterprise_get_enterprise_main_person_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "美的集团股份有限公司"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 1.92,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 10,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].ratio",
+        "value": 0.0384395427
+      },
+      {
+        "path": "resultList[0].relatedEnterpriseCurrentNum",
+        "value": 17
+      },
+      {
+        "path": "resultList[0].relatedEnterpriseHistoryNum",
+        "value": 57
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseCurrentNum",
+        "value": 4
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseHistoryNum",
+        "value": 4
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseCurrentNum",
+        "value": 38
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseHistoryNum",
+        "value": 14
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseCurrentNum",
+        "value": 19
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseHistoryNum",
+        "value": 8
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseCurrentNum",
+        "value": 1
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseHistoryNum",
+        "value": 0
+      },
+      {
+        "path": "total",
+        "value": 10
+      }
+    ],
+    "response_sha256": "a17590924e180a73b89ef636e2078ef58caea7191b19f8b9e6d91977818cb407"
+  },
+  {
+    "tool": "enterprise_risk_insight_score",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 2.952,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "risk_level",
+      "risk_reason",
+      "risk_score"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "risk_score",
+        "value": 100
+      }
+    ],
+    "response_sha256": "28d083848c160c21a977d6c585b21235c02302d2e09c5e1f82e546e0d11b85c6"
+  },
+  {
+    "tool": "risk_insight_litigation_risk_profile",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 2.956,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "caKaitingList",
+      "caKaitingTotal",
+      "caLianList",
+      "caLianTotal",
+      "caList",
+      "caTotal",
+      "edTotal",
+      "enforcementList",
+      "enforcementTotal",
+      "jdList",
+      "jdTotal",
+      "limitedTotal"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "caKaitingTotal",
+        "value": 900
+      },
+      {
+        "path": "caLianTotal",
+        "value": 73
+      },
+      {
+        "path": "caTotal",
+        "value": 562
+      },
+      {
+        "path": "edTotal",
+        "value": 0
+      },
+      {
+        "path": "enforcementTotal",
+        "value": 2
+      },
+      {
+        "path": "jdTotal",
+        "value": 668
+      },
+      {
+        "path": "limitedTotal",
+        "value": 0
+      }
+    ],
+    "response_sha256": "0377f81a7b9f7ae67be97cea8ba460f6f0af4a884586004ce36ac59e6710df70"
+  },
+  {
+    "tool": "risk_insight_court_hearings",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 2.958,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 20,
+    "reported_total": 900,
+    "numeric_evidence": [
+      {
+        "path": "total",
+        "value": 900
+      }
+    ],
+    "response_sha256": "64a66f0d958562f9d64068316ecb16e0514d3b05e55e448c275c7e581d4e0a1f"
+  },
+  {
+    "tool": "risk_insight_penalties",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 2.96,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_business_anomalies",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 2.963,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_chattel_mortgage",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 2.965,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_consumption_restrictions",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "美的集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069200036649000",
+    "elapsed_seconds": 2.967,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  }
+]

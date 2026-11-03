@@ -1,0 +1,947 @@
+[
+  {
+    "tool": "recruitment_trend",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 2.166,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingCurrentCount",
+        "value": 126960.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 126960.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 15870
+      },
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 3334
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 7862.9148723325
+      }
+    ],
+    "response_sha256": "bfcff9e2c67671a0f516bbcc14a337e369b33cadefa240428f34a1000c62931f"
+  },
+  {
+    "tool": "recruitment_employer_profile",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 2.168,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "benefitList",
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords",
+      "recruitingTypes",
+      "truncatedFields"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 3334
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 7862.9148723325
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 126960.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 126960.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 15870
+      },
+      {
+        "path": "truncatedFields.businessTags.total",
+        "value": 91
+      },
+      {
+        "path": "truncatedFields.businessTags.returned",
+        "value": 50
+      },
+      {
+        "path": "truncatedFields.recruitingCities.total",
+        "value": 254
+      },
+      {
+        "path": "truncatedFields.recruitingCities.returned",
+        "value": 50
+      }
+    ],
+    "response_sha256": "dd4182ddff10386f95607d5ef065375dc19bddd26480894907a74420f8e1905a"
+  },
+  {
+    "tool": "channel_insight_channel_analysis",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 2.81,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "productCategoryList",
+      "financialStat",
+      "salesStat"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "productCategoryList[0].number",
+        "value": 4
+      },
+      {
+        "path": "productCategoryList[0].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "financialStat.categoryCount",
+        "value": 433988
+      },
+      {
+        "path": "financialStat.regCapitalRank",
+        "value": 433897
+      },
+      {
+        "path": "salesStat.annualTurnoverRank",
+        "value": 359192
+      },
+      {
+        "path": "salesStat.categoryCount",
+        "value": 364126
+      }
+    ],
+    "response_sha256": "159c437a89f396d7d30f7b69fe458a3f1798651fd6a885dce241048da75a6973"
+  },
+  {
+    "tool": "channel_insight_channel_search",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 2.811,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 20,
+    "reported_total": 21,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].regCapital.value",
+        "value": 9117197565.0
+      },
+      {
+        "path": "resultList[1].regCapital.value",
+        "value": 500000.0
+      },
+      {
+        "path": "resultList[2].regCapital.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[3].regCapital.value",
+        "value": 20000000.0
+      },
+      {
+        "path": "resultList[4].regCapital.value",
+        "value": 500000.0
+      },
+      {
+        "path": "total",
+        "value": 21
+      }
+    ],
+    "response_sha256": "06bdad814b8c88ce3064b8de42ddaa0968a206d641d2e2eaac554b34ad70215f"
+  },
+  {
+    "tool": "operation_insight_business_scale",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 3.761,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "annualTurnover",
+      "enterpriseScale"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "7c05a4d3bcd474b7963faa2bcced12f8a2be0b1d908d323dfe3d894da56b4354"
+  },
+  {
+    "tool": "operation_insight_financing_info",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 3.763,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "fpFinancingCount",
+      "fpFinancingList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "fpFinancingCount",
+        "value": 7
+      }
+    ],
+    "response_sha256": "59adc4d5a5397eb270ec6126785a4e5a865c7b2c71307adaa341a079ad27958e"
+  },
+  {
+    "tool": "operation_insight_company_trends",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 3.766,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "isStaffExpandIn3Month",
+      "isStaffExpandIn6Month",
+      "isExpandNewCityIn3Month",
+      "isExpandNewCityIn6Month",
+      "isExpandNewCityIn12Month"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "isStaffExpandIn3Month",
+        "value": 1
+      },
+      {
+        "path": "isStaffExpandIn6Month",
+        "value": 1
+      },
+      {
+        "path": "isExpandNewCityIn3Month",
+        "value": 1
+      },
+      {
+        "path": "isExpandNewCityIn6Month",
+        "value": 1
+      },
+      {
+        "path": "isExpandNewCityIn12Month",
+        "value": 1
+      }
+    ],
+    "response_sha256": "abad3aa5854c0f2ae5a7ac66b539bbe0c1c24d66de7612992771b95f9d98b8af"
+  },
+  {
+    "tool": "operation_insight_enterprise_rankings",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name",
+      "pageSize": 10
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 3.767,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 76,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].rankingListYear",
+        "value": 2024
+      },
+      {
+        "path": "resultList[0].rank",
+        "value": 143
+      },
+      {
+        "path": "resultList[1].rankingListYear",
+        "value": 2024
+      },
+      {
+        "path": "resultList[1].rank",
+        "value": 40
+      },
+      {
+        "path": "resultList[2].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[2].rank",
+        "value": 212
+      },
+      {
+        "path": "resultList[3].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[3].rank",
+        "value": 66
+      },
+      {
+        "path": "resultList[4].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[4].rank",
+        "value": 65
+      },
+      {
+        "path": "total",
+        "value": 76
+      }
+    ],
+    "response_sha256": "a06f1ab2c2b96db0492791ee9c52f88002a0716bffa4c7c2f69123ff28a06ac4"
+  },
+  {
+    "tool": "factory_insight_factory_profile",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 3.98,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "accountPeriodRisk",
+      "factoryAddress",
+      "factoryScale",
+      "factoryTypeList",
+      "foundTime",
+      "name",
+      "nameId",
+      "regCapital"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "regCapital.value",
+        "value": 9117197565.0
+      }
+    ],
+    "response_sha256": "0bcc2891df35e5bd2114191d8ebc559aae065ea45010798f2491def7f82fe604"
+  },
+  {
+    "tool": "factory_insight_factory_product_stats",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 3.981,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "mainProductCount",
+      "productCategoriesStatInfo"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "mainProductCount",
+        "value": 305
+      },
+      {
+        "path": "productCategoriesStatInfo[0].value",
+        "value": 15
+      }
+    ],
+    "response_sha256": "347102c8ef76402c09760a723691010a25c48a9fd6559689eb3894e95b2faf08"
+  },
+  {
+    "tool": "factory_insight_factory_capabilities",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 3.983,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "enterpriseCertification",
+      "managementSystemCertification"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "5ddc07dd9c9baabd0f481b8580ec4125a0973c0e1377f68aaf22bdf5f56b08ee"
+  },
+  {
+    "tool": "enterprise_get_enterprise_base_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "比亚迪股份有限公司"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 5.482,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "base_info",
+      "desc",
+      "tag"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "base_info.payAmountCount.amount",
+        "value": 9117198000.0
+      },
+      {
+        "path": "base_info.regCapital.value",
+        "value": 9117197565.0
+      },
+      {
+        "path": "tag.hasStock",
+        "value": 1
+      },
+      {
+        "path": "tag.isAnomaly",
+        "value": 0
+      },
+      {
+        "path": "tag.isHighTechEnterprise",
+        "value": 0
+      },
+      {
+        "path": "tag.isTopEnterprise",
+        "value": 1
+      }
+    ],
+    "response_sha256": "dc251a25889930a7b1c6276b3a4ee9fc1009d13c76ce1d4e40c014cbdc0a2d1c"
+  },
+  {
+    "tool": "enterprise_get_enterprise_holder_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "比亚迪股份有限公司"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 5.484,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "holderList",
+      "stockHolderList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "holderList[0].payAmount.value",
+        "value": 1813142855.0
+      },
+      {
+        "path": "holderList[0].ratio",
+        "value": 0.5959942763
+      },
+      {
+        "path": "holderList[0].subscriptionDetail.amount",
+        "value": 5433797565.0
+      },
+      {
+        "path": "holderList[1].payAmount.value",
+        "value": 1098000000.0
+      },
+      {
+        "path": "holderList[1].ratio",
+        "value": 0.4040057237
+      },
+      {
+        "path": "holderList[1].subscriptionDetail.amount",
+        "value": 3683400000.0
+      },
+      {
+        "path": "stockHolderList[0].shareHolding",
+        "value": 3681000000.0
+      },
+      {
+        "path": "stockHolderList[0].shareHoldingRatio",
+        "value": 0.4038
+      },
+      {
+        "path": "stockHolderList[1].shareHolding",
+        "value": 1541000000.0
+      },
+      {
+        "path": "stockHolderList[1].shareHoldingRatio",
+        "value": 0.169
+      },
+      {
+        "path": "stockHolderList[2].shareHolding",
+        "value": 718000000.0
+      },
+      {
+        "path": "stockHolderList[2].shareHoldingRatio",
+        "value": 0.0787
+      },
+      {
+        "path": "stockHolderList[3].shareHolding",
+        "value": 465000000.0
+      },
+      {
+        "path": "stockHolderList[3].shareHoldingRatio",
+        "value": 0.0511
+      },
+      {
+        "path": "stockHolderList[4].shareHolding",
+        "value": 248000000.0
+      },
+      {
+        "path": "stockHolderList[4].shareHoldingRatio",
+        "value": 0.0272
+      }
+    ],
+    "response_sha256": "1678d59336cbba29c1af52f043cb921caa220cee3cc0bf314e44776af7ae169a"
+  },
+  {
+    "tool": "enterprise_get_enterprise_invest_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "比亚迪股份有限公司"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 5.487,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 50,
+    "reported_total": 109,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[0].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[0].regCapital.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[0].subscriptionAmount.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[1].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[1].regCapital.value",
+        "value": 500000000.0
+      },
+      {
+        "path": "resultList[1].subscriptionAmount.value",
+        "value": 500000000.0
+      },
+      {
+        "path": "resultList[2].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[2].regCapital.value",
+        "value": 50000000.0
+      },
+      {
+        "path": "resultList[2].subscriptionAmount.value",
+        "value": 50000000.0
+      },
+      {
+        "path": "resultList[3].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[3].regCapital.value",
+        "value": 110000000.0
+      },
+      {
+        "path": "resultList[3].subscriptionAmount.value",
+        "value": 110000000.0
+      },
+      {
+        "path": "resultList[4].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[4].regCapital.value",
+        "value": 300000000.0
+      },
+      {
+        "path": "resultList[4].subscriptionAmount.value",
+        "value": 300000000.0
+      },
+      {
+        "path": "total",
+        "value": 109
+      }
+    ],
+    "response_sha256": "97d723a5e1ddab64fe0573c03ea9caa51f0ea60a85217b5fc027c9d93b2f88ca"
+  },
+  {
+    "tool": "enterprise_get_enterprise_main_person_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "比亚迪股份有限公司"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 5.489,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 6,
+    "reported_total": 6,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].relatedEnterpriseCurrentNum",
+        "value": 3
+      },
+      {
+        "path": "resultList[0].relatedEnterpriseHistoryNum",
+        "value": 1
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseCurrentNum",
+        "value": 2
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseHistoryNum",
+        "value": 6
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseCurrentNum",
+        "value": 3
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseHistoryNum",
+        "value": 7
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseCurrentNum",
+        "value": 12
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseHistoryNum",
+        "value": 77
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseCurrentNum",
+        "value": 35
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseHistoryNum",
+        "value": 83
+      },
+      {
+        "path": "total",
+        "value": 6
+      }
+    ],
+    "response_sha256": "6189611343af752125a300a7171de31d5751265d9e0edca5c5bf5516f14e185c"
+  },
+  {
+    "tool": "enterprise_risk_insight_score",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 9.265,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "risk_level",
+      "risk_reason",
+      "risk_score"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "risk_score",
+        "value": 100
+      }
+    ],
+    "response_sha256": "28d083848c160c21a977d6c585b21235c02302d2e09c5e1f82e546e0d11b85c6"
+  },
+  {
+    "tool": "risk_insight_litigation_risk_profile",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 9.269,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "caKaitingList",
+      "caKaitingTotal",
+      "caLianList",
+      "caLianTotal",
+      "caList",
+      "caTotal",
+      "edTotal",
+      "enforcementList",
+      "enforcementTotal",
+      "jdList",
+      "jdTotal",
+      "limitedTotal"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "caKaitingTotal",
+        "value": 298
+      },
+      {
+        "path": "caLianTotal",
+        "value": 44
+      },
+      {
+        "path": "caTotal",
+        "value": 265
+      },
+      {
+        "path": "edTotal",
+        "value": 0
+      },
+      {
+        "path": "enforcementTotal",
+        "value": 1
+      },
+      {
+        "path": "jdTotal",
+        "value": 126
+      },
+      {
+        "path": "limitedTotal",
+        "value": 0
+      }
+    ],
+    "response_sha256": "890127170ddc5e52f658421b57111825f2bb26c14c81eae592e1d353cadc7079"
+  },
+  {
+    "tool": "risk_insight_court_hearings",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 9.272,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 20,
+    "reported_total": 298,
+    "numeric_evidence": [
+      {
+        "path": "total",
+        "value": 298
+      }
+    ],
+    "response_sha256": "3052273f548f8da56ee833d16abb5e853ce8fea6d39fae530c45f15a3b74b560"
+  },
+  {
+    "tool": "risk_insight_penalties",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 9.276,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_business_anomalies",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 9.28,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_consumption_restrictions",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 9.285,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_chattel_mortgage",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "比亚迪股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197737743000",
+    "elapsed_seconds": 9.286,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  }
+]

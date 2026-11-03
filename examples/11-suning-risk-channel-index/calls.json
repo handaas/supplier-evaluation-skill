@@ -1,0 +1,959 @@
+[
+  {
+    "tool": "recruitment_trend",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 2.149,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingCurrentCount",
+        "value": 131.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 131.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 137
+      },
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 221466
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 5378.2347067932
+      }
+    ],
+    "response_sha256": "892ea4104f0e2b3a57e59007d65a645b7f6240e6bbe9f8ee0506869bceb7300f"
+  },
+  {
+    "tool": "recruitment_employer_profile",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 2.155,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "benefitList",
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords",
+      "recruitingTypes",
+      "truncatedFields"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 221466
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 5378.2347067932
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 131.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 131.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 137
+      },
+      {
+        "path": "truncatedFields.businessTags.total",
+        "value": 121
+      },
+      {
+        "path": "truncatedFields.businessTags.returned",
+        "value": 50
+      },
+      {
+        "path": "truncatedFields.recruitingCities.total",
+        "value": 302
+      },
+      {
+        "path": "truncatedFields.recruitingCities.returned",
+        "value": 50
+      }
+    ],
+    "response_sha256": "a28ac798261cabc20e6d2a2e0e56261fd029bf92602af81af35e6bb623d06654"
+  },
+  {
+    "tool": "channel_insight_channel_analysis",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 2.797,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "financialStat",
+      "salesStat"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "financialStat.categoryCount",
+        "value": 710015
+      },
+      {
+        "path": "financialStat.regCapitalRank",
+        "value": 709996
+      },
+      {
+        "path": "salesStat.annualTurnoverRank",
+        "value": 568694
+      },
+      {
+        "path": "salesStat.categoryCount",
+        "value": 575045
+      }
+    ],
+    "response_sha256": "19a9393fae209135d9382416bfcc5ee5bc738d71f680e57da5ae0df304d8b86c"
+  },
+  {
+    "tool": "channel_insight_channel_search",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 2.798,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 11,
+    "reported_total": 11,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].regCapital.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[1].regCapital.value",
+        "value": 9264767618.0
+      },
+      {
+        "path": "resultList[2].regCapital.value",
+        "value": 1000000.0
+      },
+      {
+        "path": "resultList[4].regCapital.value",
+        "value": 20486000.0
+      },
+      {
+        "path": "total",
+        "value": 11
+      }
+    ],
+    "response_sha256": "200e43f2e9481a9bd3299187324e80bacb4769f577abf0a825e660a3cfba49ee"
+  },
+  {
+    "tool": "operation_insight_business_scale",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 3.75,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "annualTurnover",
+      "enterpriseScale"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "051274930105039f363b620681e2824fe3a7cc6719ae11985d43e0884f521df1"
+  },
+  {
+    "tool": "operation_insight_financing_info",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 3.757,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "fpFinancingCount",
+      "fpFinancingList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "fpFinancingCount",
+        "value": 7
+      }
+    ],
+    "response_sha256": "5bc13cbabae3f111de38c6c0a3212d0594e202271f1abd4320fa65d22ce1bee0"
+  },
+  {
+    "tool": "operation_insight_company_trends",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 3.758,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "isStaffExpandIn12Month",
+      "isExpandNewCityIn12Month",
+      "isDiffAreaWinBidIn3Month",
+      "isDiffAreaWinBidIn6Month",
+      "isDiffAreaWinBidIn12Month"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "isStaffExpandIn12Month",
+        "value": 1
+      },
+      {
+        "path": "isExpandNewCityIn12Month",
+        "value": 1
+      },
+      {
+        "path": "isDiffAreaWinBidIn3Month",
+        "value": 1
+      },
+      {
+        "path": "isDiffAreaWinBidIn6Month",
+        "value": 1
+      },
+      {
+        "path": "isDiffAreaWinBidIn12Month",
+        "value": 1
+      }
+    ],
+    "response_sha256": "6a1607e435ea73b65a4d1ad9859c4ee0dc93cc27a903d1f568dfc706f5dda5e7"
+  },
+  {
+    "tool": "operation_insight_enterprise_rankings",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 10
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 3.759,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 26,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].rankingListYear",
+        "value": 2024
+      },
+      {
+        "path": "resultList[0].rank",
+        "value": 287
+      },
+      {
+        "path": "resultList[1].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[1].rank",
+        "value": 248
+      },
+      {
+        "path": "resultList[2].rankingListYear",
+        "value": 2022
+      },
+      {
+        "path": "resultList[2].rank",
+        "value": 96
+      },
+      {
+        "path": "resultList[3].rankingListYear",
+        "value": 2022
+      },
+      {
+        "path": "resultList[4].rankingListYear",
+        "value": 2022
+      },
+      {
+        "path": "resultList[4].rank",
+        "value": 53
+      },
+      {
+        "path": "total",
+        "value": 26
+      }
+    ],
+    "response_sha256": "200fadd491a0c29c10c7ec97ac6e7eb2146b1d69d1a40859d310da18b252f4f4"
+  },
+  {
+    "tool": "factory_insight_factory_profile",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 3.97,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "accountPeriodRisk",
+      "factoryScale",
+      "factoryTypeList",
+      "foundTime",
+      "name",
+      "nameId",
+      "regCapital"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "regCapital.value",
+        "value": 9264767618.0
+      }
+    ],
+    "response_sha256": "477d7252b5d919ede9f920e9c919aae107de5486f2e92dcbf68324673f8b97f3"
+  },
+  {
+    "tool": "factory_insight_factory_capabilities",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 3.971,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "factory_insight_factory_product_stats",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 3.972,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "mainProductCount"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "mainProductCount",
+        "value": 109
+      }
+    ],
+    "response_sha256": "a8beddd866cbc0e39d7d703694d76805e325b688f855368781841e5ffd74892e"
+  },
+  {
+    "tool": "enterprise_get_enterprise_base_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "苏宁易购集团股份有限公司"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 5.471,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "base_info",
+      "desc",
+      "tag"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "base_info.payAmountCount.amount",
+        "value": 9264768000.0
+      },
+      {
+        "path": "base_info.regCapital.value",
+        "value": 9264767618.0
+      },
+      {
+        "path": "tag.hasStock",
+        "value": 1
+      },
+      {
+        "path": "tag.isAnomaly",
+        "value": 0
+      },
+      {
+        "path": "tag.isHighTechEnterprise",
+        "value": 0
+      },
+      {
+        "path": "tag.isTopEnterprise",
+        "value": 1
+      }
+    ],
+    "response_sha256": "e5c511d3a666cc3942e967a84cb3021a79e48897b6ef54e834e78d3497d94c3b"
+  },
+  {
+    "tool": "enterprise_get_enterprise_holder_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "苏宁易购集团股份有限公司"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 5.475,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "holderList",
+      "stockHolderList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "holderList[0].payAmount.value",
+        "value": 32716800.0
+      },
+      {
+        "path": "holderList[0].ratio",
+        "value": 0.3511893517
+      },
+      {
+        "path": "holderList[0].subscriptionDetail.amount",
+        "value": 32716800.0
+      },
+      {
+        "path": "holderList[1].payAmount.value",
+        "value": 25000000.0
+      },
+      {
+        "path": "holderList[1].ratio",
+        "value": 0.2683555174
+      },
+      {
+        "path": "holderList[1].subscriptionDetail.amount",
+        "value": 25000000.0
+      },
+      {
+        "path": "holderList[2].payAmount.value",
+        "value": 17040000.0
+      },
+      {
+        "path": "holderList[2].ratio",
+        "value": 0.1829111207
+      },
+      {
+        "path": "holderList[2].subscriptionDetail.amount",
+        "value": 17040000.0
+      },
+      {
+        "path": "holderList[3].payAmount.value",
+        "value": 8179200.0
+      },
+      {
+        "path": "holderList[3].ratio",
+        "value": 0.0877973379
+      },
+      {
+        "path": "holderList[3].subscriptionDetail.amount",
+        "value": 8179200.0
+      },
+      {
+        "path": "holderList[4].payAmount.value",
+        "value": 4771200.0
+      },
+      {
+        "path": "holderList[4].ratio",
+        "value": 0.0512151138
+      },
+      {
+        "path": "holderList[4].subscriptionDetail.amount",
+        "value": 4771200.0
+      },
+      {
+        "path": "stockHolderList[0].shareHolding",
+        "value": 1640000000.0
+      },
+      {
+        "path": "stockHolderList[0].shareHoldingRatio",
+        "value": 0.177
+      },
+      {
+        "path": "stockHolderList[1].shareHolding",
+        "value": 1634000000.0
+      },
+      {
+        "path": "stockHolderList[1].shareHoldingRatio",
+        "value": 0.1763
+      },
+      {
+        "path": "stockHolderList[2].shareHolding",
+        "value": 1579000000.0
+      },
+      {
+        "path": "stockHolderList[2].shareHoldingRatio",
+        "value": 0.1704
+      },
+      {
+        "path": "stockHolderList[3].shareHolding",
+        "value": 520000000.0
+      },
+      {
+        "path": "stockHolderList[3].shareHoldingRatio",
+        "value": 0.0561
+      },
+      {
+        "path": "stockHolderList[4].shareHolding",
+        "value": 324000000.0
+      },
+      {
+        "path": "stockHolderList[4].shareHoldingRatio",
+        "value": 0.035
+      }
+    ],
+    "response_sha256": "557c010c521540f8dec04240f4033cd9a7b6c64d2979f06a66974237d901f300"
+  },
+  {
+    "tool": "enterprise_get_enterprise_invest_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "苏宁易购集团股份有限公司"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 5.478,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 50,
+    "reported_total": 404,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[0].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[0].regCapital.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[0].subscriptionAmount.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[1].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[1].regCapital.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[1].subscriptionAmount.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[2].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[2].regCapital.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[2].subscriptionAmount.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[3].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[3].regCapital.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[3].subscriptionAmount.value",
+        "value": 5000000.0
+      },
+      {
+        "path": "resultList[4].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[4].regCapital.value",
+        "value": 30000000.0
+      },
+      {
+        "path": "resultList[4].subscriptionAmount.value",
+        "value": 30000000.0
+      },
+      {
+        "path": "total",
+        "value": 404
+      }
+    ],
+    "response_sha256": "e4c8235b02ed601e4719b39180026f92f5ca8521da446e5f0c78647c52dfd7dd"
+  },
+  {
+    "tool": "enterprise_get_enterprise_main_person_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "苏宁易购集团股份有限公司"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 5.48,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 9,
+    "reported_total": 9,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].relatedEnterpriseCurrentNum",
+        "value": 5
+      },
+      {
+        "path": "resultList[0].relatedEnterpriseHistoryNum",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseCurrentNum",
+        "value": 2
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseHistoryNum",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseCurrentNum",
+        "value": 5
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseHistoryNum",
+        "value": 7
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseCurrentNum",
+        "value": 2
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseHistoryNum",
+        "value": 3
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseCurrentNum",
+        "value": 6
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseHistoryNum",
+        "value": 8
+      },
+      {
+        "path": "total",
+        "value": 9
+      }
+    ],
+    "response_sha256": "9a3fce0c6443220fbec2d1d0be18ecb41e152d54d3dbe303aa0873d1884771b2"
+  },
+  {
+    "tool": "enterprise_risk_insight_score",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 9.262,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "risk_level",
+      "risk_reason",
+      "risk_score"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "risk_score",
+        "value": 100
+      }
+    ],
+    "response_sha256": "28d083848c160c21a977d6c585b21235c02302d2e09c5e1f82e546e0d11b85c6"
+  },
+  {
+    "tool": "risk_insight_litigation_risk_profile",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 9.267,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "caKaitingList",
+      "caKaitingTotal",
+      "caLianList",
+      "caLianTotal",
+      "caList",
+      "caTotal",
+      "edTotal",
+      "enforcementList",
+      "enforcementTotal",
+      "jdList",
+      "jdTotal",
+      "limitedTotal"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "caKaitingTotal",
+        "value": 3412
+      },
+      {
+        "path": "caLianTotal",
+        "value": 192
+      },
+      {
+        "path": "caTotal",
+        "value": 1499
+      },
+      {
+        "path": "edTotal",
+        "value": 0
+      },
+      {
+        "path": "enforcementTotal",
+        "value": 66
+      },
+      {
+        "path": "jdTotal",
+        "value": 1885
+      },
+      {
+        "path": "limitedTotal",
+        "value": 0
+      }
+    ],
+    "response_sha256": "93abcd877d1527c04954796a81372fa5e73c64f70eb5d39781bfcaa06c13cc74"
+  },
+  {
+    "tool": "risk_insight_court_hearings",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 9.27,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 20,
+    "reported_total": 3412,
+    "numeric_evidence": [
+      {
+        "path": "total",
+        "value": 3412
+      }
+    ],
+    "response_sha256": "101fed41856335297b8c1c442c2467a4a1bb3aee2c689a09a04314720189cf26"
+  },
+  {
+    "tool": "risk_insight_penalties",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 9.272,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_business_anomalies",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 9.276,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_consumption_restrictions",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 9.279,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_chattel_mortgage",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "苏宁易购集团股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069198432488000",
+    "elapsed_seconds": 9.281,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  }
+]

@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "skill": "supplier-evaluation-skill",
+  "case_id": "11-suning-risk-channel-index",
+  "title": "苏宁易购风险与渠道人工复核索引",
+  "invocation_id": "1793069198432488000",
+  "provenance": {
+    "integrator_id": "683e574805537ace146cc05e",
+    "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+    "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+    "scenario_sha256": "f4d2ea16bd1c0acdf761d01ed9b74a6a6f159191fc65c0fac76de51baceab6f5",
+    "skill_source_hashes": {
+      "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+      "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+      "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+      "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+      "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+      "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+      "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+      "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+    },
+    "upstream_source_hashes": {
+      "enterprise-mcp-server": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+      "enterprise-risk-mcp-server": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+      "enterprise-operation-mcp-server": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+      "factory-channel-mcp-server": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+      "factory-insight-mcp-server": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+      "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    },
+    "upstream_dependency_hashes": {
+      "enterprise-mcp-server/server/mcp_server.py": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+      "enterprise-risk-mcp-server/server/mcp_server.py": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+      "enterprise-operation-mcp-server/server/mcp_server.py": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+      "factory-channel-mcp-server/server/mcp_server.py": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+      "factory-insight-mcp-server/server/mcp_server.py": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+      "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    }
+  },
+  "source_changed_during_run": false,
+  "started_at": "2026-10-27T10:46:38+08:00",
+  "elapsed_seconds": 10.837,
+  "returncode": 0,
+  "exception_type": null,
+  "command": "python3 supplier-evaluation-skill/scripts/compose_fusion_report.py --enterprise '苏宁易购集团股份有限公司' --keyword-type name --output supplier-evaluation-skill/output/live-replaced-20261027/11-suning-risk-channel-index/report.json --report-output supplier-evaluation-skill/output/live-replaced-20261027/11-suning-risk-channel-index/report.html",
+  "transport": "local MCP servers via loopback streamable-http",
+  "cache_used": false,
+  "call_count": 22,
+  "successful_data_calls": 17,
+  "empty_calls": 5,
+  "failed_calls": 0,
+  "checks": {
+    "issues": [],
+    "warnings": [],
+    "coverage_pct": 69,
+    "subject": {
+      "enterprise": "苏宁易购集团股份有限公司",
+      "match_raw": "苏宁易购集团股份有限公司",
+      "resolved": true,
+      "resolve_reason": "工商基础信息中的企业名称和统一社会信用代码已返回"
+    },
+    "title": "苏宁易购集团股份有限公司 供应商评估报告",
+    "data_mode": "live_mcp",
+    "metrics": [
+      {
+        "label": "上游风险评分",
+        "value": "100",
+        "hint": "上游原始口径；若与司法事件数量冲突，不作为低风险背书"
+      },
+      {
+        "label": "对外投资",
+        "value": "404",
+        "hint": "关联方数量（风险传导面）"
+      },
+      {
+        "label": "注册资本",
+        "value": "人民币 92.65亿",
+        "hint": "工商登记注册资本"
+      },
+      {
+        "label": "融资轮次",
+        "value": "7",
+        "hint": "历史融资轮次"
+      },
+      {
+        "label": "数据产品账期标签",
+        "value": "低",
+        "hint": "上游数据产品原始标签；不代表财务稳健或账期可控"
+      },
+      {
+        "label": "在招岗位",
+        "value": "131",
+        "hint": "招聘平台公开数量；不代表产能或履约能力"
+      },
+      {
+        "label": "开庭公告",
+        "value": "3412",
+        "hint": "诉讼开庭记录总数"
+      },
+      {
+        "label": "股东数量",
+        "value": "9",
+        "hint": "工商公示股东数"
+      },
+      {
+        "label": "成立年限",
+        "value": "30 年",
+        "hint": "成立于 1996 年"
+      }
+    ],
+    "quality_report": {
+      "total_sections": 13,
+      "populated_sections": 9,
+      "empty_sections": 4,
+      "coverage_pct": 69,
+      "data_sources": 6,
+      "cross_insights": 3
+    },
+    "unregistered_tools": [],
+    "checks": {
+      "json_html_markdown": true,
+      "explicit_live": true,
+      "tool_calls_recorded": 22,
+      "offline_scripts": true,
+      "independent_rerender": true,
+      "offline_browser": true
+    }
+  },
+  "status": "passed",
+  "source_hashes": {
+    "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+    "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+    "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+    "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+    "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+    "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+    "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+    "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+  },
+  "technical_status": "passed",
+  "audited_at": "2026-10-27T11:13:04+08:00",
+  "evidence_binding": {
+    "report.json": "a779f75354e74e5d017898c3c8c10ae6da8bf6dedaf68bbe1bbfe12e89e1a1a9",
+    "report.html": "2b03a0d3e9e60a841e49da5a5d840a4926e51243d41cd38863707a37c944b6c8",
+    "report.md": "49ef3c04149b3146bf3a305bf06daa5e26a9bd179238d7b0464f598bd4e9614d",
+    "calls.json": "bc0f25ff1d90c629ef7998b74f1a71f33e8aaa0eb3fe43facd418a0af1640fef",
+    "result.json": "325d4b84ec6e581afd860f4830f4ce321be57f8b7618abe060d8056c586f4d89",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}

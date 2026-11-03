@@ -1,0 +1,871 @@
+{
+  "run_id": "live-replaced-20261027",
+  "skill": "supplier-evaluation-skill",
+  "counts": {
+    "passed": 4
+  },
+  "scenarios": [
+    {
+      "scenario": {
+        "id": "09-luxshare-prescreen-gap-register",
+        "title": "立讯精密供应商预筛证据缺口表",
+        "user_request": "整理立讯精密工业股份有限公司的工商主体、工厂平台线索和公开风险事件，形成供应商预筛证据与缺口表；不要给出合格、准入或供货能力推荐。",
+        "purpose": "验证制造供应商预筛中主体归属、工厂线索和风险记录能否被分别核对。",
+        "args": [
+          "--enterprise",
+          "立讯精密工业股份有限公司",
+          "--keyword-type",
+          "name"
+        ],
+        "expected_checks": [
+          "工商主体必须确认",
+          "工厂平台名称或产品线索至少一项真实非空",
+          "风险维度或风险代表记录至少一项真实非空",
+          "工厂记录无法映射工商标识时明确待核",
+          "不输出准入、合格或供货能力推荐"
+        ],
+        "limitations": [
+          "不替代现场验厂、质量体系审核和历史交付核验",
+          "工厂平台主体 ID 不一定等同工商统一信用代码",
+          "实际产能、良率和交付能力缺失时必须保持未知"
+        ]
+      },
+      "result": {
+        "schema_version": 1,
+        "skill": "supplier-evaluation-skill",
+        "case_id": "09-luxshare-prescreen-gap-register",
+        "title": "立讯精密供应商预筛证据缺口表",
+        "invocation_id": "1793069197397377000",
+        "provenance": {
+          "integrator_id": "683e574805537ace146cc05e",
+          "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+          "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+          "scenario_sha256": "fa844933c5d352bc5d6d62c2e15d3bf332bace6690a34dd44915bc1717961a46",
+          "skill_source_hashes": {
+            "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+            "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+            "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+            "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+            "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+            "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+            "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+            "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+          },
+          "upstream_source_hashes": {
+            "enterprise-mcp-server": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          },
+          "upstream_dependency_hashes": {
+            "enterprise-mcp-server/server/mcp_server.py": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server/server/mcp_server.py": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server/server/mcp_server.py": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server/server/mcp_server.py": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server/server/mcp_server.py": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          }
+        },
+        "source_changed_during_run": false,
+        "started_at": "2026-10-27T10:46:37+08:00",
+        "elapsed_seconds": 2.481,
+        "returncode": 0,
+        "exception_type": null,
+        "command": "python3 supplier-evaluation-skill/scripts/compose_fusion_report.py --enterprise '立讯精密工业股份有限公司' --keyword-type name --output supplier-evaluation-skill/output/live-replaced-20261027/09-luxshare-prescreen-gap-register/report.json --report-output supplier-evaluation-skill/output/live-replaced-20261027/09-luxshare-prescreen-gap-register/report.html",
+        "transport": "local MCP servers via loopback streamable-http",
+        "cache_used": false,
+        "call_count": 22,
+        "successful_data_calls": 18,
+        "empty_calls": 4,
+        "failed_calls": 0,
+        "checks": {
+          "issues": [],
+          "warnings": [],
+          "coverage_pct": 77,
+          "subject": {
+            "enterprise": "立讯精密工业股份有限公司",
+            "match_raw": "立讯精密工业股份有限公司",
+            "resolved": true,
+            "resolve_reason": "工商基础信息中的企业名称和统一社会信用代码已返回"
+          },
+          "title": "立讯精密工业股份有限公司 供应商评估报告",
+          "data_mode": "live_mcp",
+          "metrics": [
+            {
+              "label": "上游风险评分",
+              "value": "100",
+              "hint": "上游原始口径；若与司法事件数量冲突，不作为低风险背书"
+            },
+            {
+              "label": "对外投资",
+              "value": "54",
+              "hint": "关联方数量（风险传导面）"
+            },
+            {
+              "label": "行政处罚",
+              "value": "1",
+              "hint": "行政处罚记录数"
+            },
+            {
+              "label": "注册资本",
+              "value": "人民币 72.47亿",
+              "hint": "工商登记注册资本"
+            },
+            {
+              "label": "融资轮次",
+              "value": "9",
+              "hint": "历史融资轮次"
+            },
+            {
+              "label": "数据产品账期标签",
+              "value": "低",
+              "hint": "上游数据产品原始标签；不代表财务稳健或账期可控"
+            },
+            {
+              "label": "在招岗位",
+              "value": "1006",
+              "hint": "招聘平台公开数量；不代表产能或履约能力"
+            },
+            {
+              "label": "开庭公告",
+              "value": "26",
+              "hint": "诉讼开庭记录总数"
+            },
+            {
+              "label": "股东数量",
+              "value": "2",
+              "hint": "工商公示股东数"
+            },
+            {
+              "label": "成立年限",
+              "value": "22 年",
+              "hint": "成立于 2004 年"
+            }
+          ],
+          "quality_report": {
+            "total_sections": 13,
+            "populated_sections": 10,
+            "empty_sections": 3,
+            "coverage_pct": 77,
+            "data_sources": 6,
+            "cross_insights": 3
+          },
+          "unregistered_tools": [],
+          "checks": {
+            "json_html_markdown": true,
+            "explicit_live": true,
+            "tool_calls_recorded": 22,
+            "offline_scripts": true,
+            "independent_rerender": true,
+            "offline_browser": true
+          }
+        },
+        "status": "passed",
+        "source_hashes": {
+          "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+          "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+          "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+          "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+          "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+          "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+          "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+          "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+        },
+        "technical_status": "passed",
+        "audited_at": "2026-10-27T11:13:03+08:00",
+        "evidence_binding": {
+          "report.json": "a38cc460c5f952e7c89e5c697bfd58967a0dc15f8ca0aff784bc01ec74549acf",
+          "report.html": "ee0ce28ddb780fec61dea50a36f7b066d11bf00c77119ee9e07e3a149c651cf7",
+          "report.md": "8e907cc269736bb7ae46c6e55eb0dc05439498c331e5f02770055fe86cd9744c",
+          "calls.json": "655904a4978d736a6e9ebe5a7eb65a0dd34f1b9aa7873a9e4d71a24df863de6c",
+          "result.json": "d383593e2e30a2b8bf7fb3a7c1c049d67dca03f38a32da4618c83317ed768bb7",
+          "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+        },
+        "business_review": {
+          "id": "09-luxshare-prescreen-gap-register",
+          "verdict": "acceptable",
+          "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+          "checks": [
+            {
+              "expectation": "工商主体必须确认",
+              "status": "pass",
+              "evidence": "工商=立讯精密工业股份有限公司/91440300760482233Q"
+            },
+            {
+              "expectation": "工厂平台名称或产品线索至少一项真实非空",
+              "status": "pass",
+              "evidence": "工厂线索=['立讯精密工业股份有限公司', '37622fc02a0537bc', '23']"
+            },
+            {
+              "expectation": "风险维度或风险代表记录至少一项真实非空",
+              "status": "pass",
+              "evidence": "风险集合=2/20/1"
+            },
+            {
+              "expectation": "工厂记录无法映射工商标识时明确待核",
+              "status": "pass",
+              "evidence": "关系核验=True、工厂主体ID=37622fc02a0537bc"
+            },
+            {
+              "expectation": "不输出准入、合格或供货能力推荐",
+              "status": "pass",
+              "evidence": "enterprise/factory/risk 三域均至少一项 data、无 error；风险域的处罚与开庭有实际数据，另有部分风险子项 empty；报告未输出准入/合格/供货推荐"
+            }
+          ],
+          "issues": [],
+          "evidence_binding": {
+            "report.json": "a38cc460c5f952e7c89e5c697bfd58967a0dc15f8ca0aff784bc01ec74549acf",
+            "report.html": "ee0ce28ddb780fec61dea50a36f7b066d11bf00c77119ee9e07e3a149c651cf7",
+            "report.md": "8e907cc269736bb7ae46c6e55eb0dc05439498c331e5f02770055fe86cd9744c",
+            "calls.json": "655904a4978d736a6e9ebe5a7eb65a0dd34f1b9aa7873a9e4d71a24df863de6c",
+            "result.json": "d383593e2e30a2b8bf7fb3a7c1c049d67dca03f38a32da4618c83317ed768bb7",
+            "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+          }
+        }
+      }
+    },
+    {
+      "scenario": {
+        "id": "10-byd-expansion-signal-audit",
+        "title": "比亚迪扩张信号与产能缺口审计",
+        "user_request": "核对比亚迪股份有限公司的招聘、经营规模和工厂平台线索，区分公开扩张信号与实际可用产能；不要据此判断稳定履约或推荐准入。",
+        "purpose": "验证招聘与经营数据不会被错误外推为产能和交付能力。",
+        "args": [
+          "--enterprise",
+          "比亚迪股份有限公司",
+          "--keyword-type",
+          "name"
+        ],
+        "expected_checks": [
+          "工商主体必须确认",
+          "招聘域至少一个实际字段非空",
+          "经营规模或融资域至少一个实际字段非空",
+          "工厂平台产品或认证线索至少一项非空",
+          "招聘和经营不得被等同实际产能或稳定履约"
+        ],
+        "limitations": [
+          "招聘不能证明员工到岗、产线爬坡或可用产能",
+          "具体产品适配需技术审核",
+          "实际产能与历史交付需现场和订单证据"
+        ]
+      },
+      "result": {
+        "schema_version": 1,
+        "skill": "supplier-evaluation-skill",
+        "case_id": "10-byd-expansion-signal-audit",
+        "title": "比亚迪扩张信号与产能缺口审计",
+        "invocation_id": "1793069197737743000",
+        "provenance": {
+          "integrator_id": "683e574805537ace146cc05e",
+          "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+          "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+          "scenario_sha256": "f1fcf34325b3d8c93ffa8e10a3d05d560b1d69ea00dbf3c85b79738509a31ef7",
+          "skill_source_hashes": {
+            "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+            "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+            "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+            "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+            "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+            "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+            "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+            "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+          },
+          "upstream_source_hashes": {
+            "enterprise-mcp-server": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          },
+          "upstream_dependency_hashes": {
+            "enterprise-mcp-server/server/mcp_server.py": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server/server/mcp_server.py": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server/server/mcp_server.py": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server/server/mcp_server.py": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server/server/mcp_server.py": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          }
+        },
+        "source_changed_during_run": false,
+        "started_at": "2026-10-27T10:46:37+08:00",
+        "elapsed_seconds": 11.513,
+        "returncode": 0,
+        "exception_type": null,
+        "command": "python3 supplier-evaluation-skill/scripts/compose_fusion_report.py --enterprise '比亚迪股份有限公司' --keyword-type name --output supplier-evaluation-skill/output/live-replaced-20261027/10-byd-expansion-signal-audit/report.json --report-output supplier-evaluation-skill/output/live-replaced-20261027/10-byd-expansion-signal-audit/report.html",
+        "transport": "local MCP servers via loopback streamable-http",
+        "cache_used": false,
+        "call_count": 22,
+        "successful_data_calls": 18,
+        "empty_calls": 4,
+        "failed_calls": 0,
+        "checks": {
+          "issues": [],
+          "warnings": [],
+          "coverage_pct": 69,
+          "subject": {
+            "enterprise": "比亚迪股份有限公司",
+            "match_raw": "比亚迪股份有限公司",
+            "resolved": true,
+            "resolve_reason": "工商基础信息中的企业名称和统一社会信用代码已返回"
+          },
+          "title": "比亚迪股份有限公司 供应商评估报告",
+          "data_mode": "live_mcp",
+          "metrics": [
+            {
+              "label": "上游风险评分",
+              "value": "100",
+              "hint": "上游原始口径；若与司法事件数量冲突，不作为低风险背书"
+            },
+            {
+              "label": "对外投资",
+              "value": "109",
+              "hint": "关联方数量（风险传导面）"
+            },
+            {
+              "label": "注册资本",
+              "value": "人民币 91.17亿",
+              "hint": "工商登记注册资本"
+            },
+            {
+              "label": "融资轮次",
+              "value": "7",
+              "hint": "历史融资轮次"
+            },
+            {
+              "label": "数据产品账期标签",
+              "value": "低",
+              "hint": "上游数据产品原始标签；不代表财务稳健或账期可控"
+            },
+            {
+              "label": "在招岗位",
+              "value": "126960",
+              "hint": "招聘平台公开数量；不代表产能或履约能力"
+            },
+            {
+              "label": "开庭公告",
+              "value": "298",
+              "hint": "诉讼开庭记录总数"
+            },
+            {
+              "label": "股东数量",
+              "value": "2",
+              "hint": "工商公示股东数"
+            },
+            {
+              "label": "成立年限",
+              "value": "31 年",
+              "hint": "成立于 1995 年"
+            }
+          ],
+          "quality_report": {
+            "total_sections": 13,
+            "populated_sections": 9,
+            "empty_sections": 4,
+            "coverage_pct": 69,
+            "data_sources": 6,
+            "cross_insights": 3
+          },
+          "unregistered_tools": [],
+          "checks": {
+            "json_html_markdown": true,
+            "explicit_live": true,
+            "tool_calls_recorded": 22,
+            "offline_scripts": true,
+            "independent_rerender": true,
+            "offline_browser": true
+          }
+        },
+        "status": "passed",
+        "source_hashes": {
+          "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+          "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+          "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+          "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+          "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+          "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+          "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+          "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+        },
+        "technical_status": "passed",
+        "audited_at": "2026-10-27T11:13:04+08:00",
+        "evidence_binding": {
+          "report.json": "13f4354822f7b33c39c31774aeb98b2273dde07c4ab6b2dbeacb479d463223e6",
+          "report.html": "866795e0393fe1acf5670856d823c2878ad405bbe324f7a8a085d6b07ceb7c53",
+          "report.md": "ae2512361690ab6c18cdc652e8a36095c6ed1270ea9a042455688b1e993198a4",
+          "calls.json": "398afd54ee4956126731bdf29996821df2fa445312f1ab7c4138c05d3248213f",
+          "result.json": "6f8fed9b6708aa24dbfcfa13193d37e80dc851972bae22eca00298da9ee98d98",
+          "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+        },
+        "business_review": {
+          "id": "10-byd-expansion-signal-audit",
+          "verdict": "acceptable",
+          "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+          "checks": [
+            {
+              "expectation": "工商主体必须确认",
+              "status": "pass",
+              "evidence": "工商=比亚迪股份有限公司/91440300192317458F"
+            },
+            {
+              "expectation": "招聘域至少一个实际字段非空",
+              "status": "pass",
+              "evidence": "招聘=['126960', '126960', '7863 元/月']"
+            },
+            {
+              "expectation": "经营规模或融资域至少一个实际字段非空",
+              "status": "pass",
+              "evidence": "经营=['10000人以上', '10亿以上', '7', '10']"
+            },
+            {
+              "expectation": "工厂平台产品或认证线索至少一项非空",
+              "status": "pass",
+              "evidence": "工厂=[\"['CCC', 'ISO9000\\\\\\\\ISO140000?OHSAS18000?QC080000?RoHS']\", '305']"
+            },
+            {
+              "expectation": "招聘和经营不得被等同实际产能或稳定履约",
+              "status": "pass",
+              "evidence": "recruitment/operation/factory=data/data/data，未将信号写成实际产能/稳定履约"
+            }
+          ],
+          "issues": [],
+          "evidence_binding": {
+            "report.json": "13f4354822f7b33c39c31774aeb98b2273dde07c4ab6b2dbeacb479d463223e6",
+            "report.html": "866795e0393fe1acf5670856d823c2878ad405bbe324f7a8a085d6b07ceb7c53",
+            "report.md": "ae2512361690ab6c18cdc652e8a36095c6ed1270ea9a042455688b1e993198a4",
+            "calls.json": "398afd54ee4956126731bdf29996821df2fa445312f1ab7c4138c05d3248213f",
+            "result.json": "6f8fed9b6708aa24dbfcfa13193d37e80dc851972bae22eca00298da9ee98d98",
+            "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+          }
+        }
+      }
+    },
+    {
+      "scenario": {
+        "id": "11-suning-risk-channel-index",
+        "title": "苏宁易购风险与渠道人工复核索引",
+        "user_request": "整理苏宁易购集团股份有限公司的司法风险记录和渠道关系搜索结果，形成采购人工复核索引；不要推断现金流、账期能力或给出附条件准入建议。",
+        "purpose": "验证风险事件与渠道关系两个相关域能够独立呈现，且渠道线索不会抵消风险。",
+        "args": [
+          "--enterprise",
+          "苏宁易购集团股份有限公司",
+          "--keyword-type",
+          "name"
+        ],
+        "expected_checks": [
+          "工商主体必须确认",
+          "司法风险维度或开庭记录至少一项真实非空",
+          "渠道关联搜索返回或分类样本至少一项真实非空",
+          "渠道关系状态明确为待核或已核事实",
+          "不推断现金流、账期能力或准入结论"
+        ],
+        "limitations": [
+          "公开司法记录需核验案由、角色、金额和最新状态",
+          "渠道搜索结果不等于真实销售关系或销量",
+          "公开数据不能直接测算现金流和账期"
+        ]
+      },
+      "result": {
+        "schema_version": 1,
+        "skill": "supplier-evaluation-skill",
+        "case_id": "11-suning-risk-channel-index",
+        "title": "苏宁易购风险与渠道人工复核索引",
+        "invocation_id": "1793069198432488000",
+        "provenance": {
+          "integrator_id": "683e574805537ace146cc05e",
+          "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+          "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+          "scenario_sha256": "f4d2ea16bd1c0acdf761d01ed9b74a6a6f159191fc65c0fac76de51baceab6f5",
+          "skill_source_hashes": {
+            "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+            "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+            "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+            "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+            "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+            "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+            "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+            "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+          },
+          "upstream_source_hashes": {
+            "enterprise-mcp-server": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          },
+          "upstream_dependency_hashes": {
+            "enterprise-mcp-server/server/mcp_server.py": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server/server/mcp_server.py": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server/server/mcp_server.py": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server/server/mcp_server.py": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server/server/mcp_server.py": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          }
+        },
+        "source_changed_during_run": false,
+        "started_at": "2026-10-27T10:46:38+08:00",
+        "elapsed_seconds": 10.837,
+        "returncode": 0,
+        "exception_type": null,
+        "command": "python3 supplier-evaluation-skill/scripts/compose_fusion_report.py --enterprise '苏宁易购集团股份有限公司' --keyword-type name --output supplier-evaluation-skill/output/live-replaced-20261027/11-suning-risk-channel-index/report.json --report-output supplier-evaluation-skill/output/live-replaced-20261027/11-suning-risk-channel-index/report.html",
+        "transport": "local MCP servers via loopback streamable-http",
+        "cache_used": false,
+        "call_count": 22,
+        "successful_data_calls": 17,
+        "empty_calls": 5,
+        "failed_calls": 0,
+        "checks": {
+          "issues": [],
+          "warnings": [],
+          "coverage_pct": 69,
+          "subject": {
+            "enterprise": "苏宁易购集团股份有限公司",
+            "match_raw": "苏宁易购集团股份有限公司",
+            "resolved": true,
+            "resolve_reason": "工商基础信息中的企业名称和统一社会信用代码已返回"
+          },
+          "title": "苏宁易购集团股份有限公司 供应商评估报告",
+          "data_mode": "live_mcp",
+          "metrics": [
+            {
+              "label": "上游风险评分",
+              "value": "100",
+              "hint": "上游原始口径；若与司法事件数量冲突，不作为低风险背书"
+            },
+            {
+              "label": "对外投资",
+              "value": "404",
+              "hint": "关联方数量（风险传导面）"
+            },
+            {
+              "label": "注册资本",
+              "value": "人民币 92.65亿",
+              "hint": "工商登记注册资本"
+            },
+            {
+              "label": "融资轮次",
+              "value": "7",
+              "hint": "历史融资轮次"
+            },
+            {
+              "label": "数据产品账期标签",
+              "value": "低",
+              "hint": "上游数据产品原始标签；不代表财务稳健或账期可控"
+            },
+            {
+              "label": "在招岗位",
+              "value": "131",
+              "hint": "招聘平台公开数量；不代表产能或履约能力"
+            },
+            {
+              "label": "开庭公告",
+              "value": "3412",
+              "hint": "诉讼开庭记录总数"
+            },
+            {
+              "label": "股东数量",
+              "value": "9",
+              "hint": "工商公示股东数"
+            },
+            {
+              "label": "成立年限",
+              "value": "30 年",
+              "hint": "成立于 1996 年"
+            }
+          ],
+          "quality_report": {
+            "total_sections": 13,
+            "populated_sections": 9,
+            "empty_sections": 4,
+            "coverage_pct": 69,
+            "data_sources": 6,
+            "cross_insights": 3
+          },
+          "unregistered_tools": [],
+          "checks": {
+            "json_html_markdown": true,
+            "explicit_live": true,
+            "tool_calls_recorded": 22,
+            "offline_scripts": true,
+            "independent_rerender": true,
+            "offline_browser": true
+          }
+        },
+        "status": "passed",
+        "source_hashes": {
+          "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+          "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+          "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+          "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+          "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+          "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+          "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+          "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+        },
+        "technical_status": "passed",
+        "audited_at": "2026-10-27T11:13:04+08:00",
+        "evidence_binding": {
+          "report.json": "a779f75354e74e5d017898c3c8c10ae6da8bf6dedaf68bbe1bbfe12e89e1a1a9",
+          "report.html": "2b03a0d3e9e60a841e49da5a5d840a4926e51243d41cd38863707a37c944b6c8",
+          "report.md": "49ef3c04149b3146bf3a305bf06daa5e26a9bd179238d7b0464f598bd4e9614d",
+          "calls.json": "bc0f25ff1d90c629ef7998b74f1a71f33e8aaa0eb3fe43facd418a0af1640fef",
+          "result.json": "325d4b84ec6e581afd860f4830f4ce321be57f8b7618abe060d8056c586f4d89",
+          "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+        },
+        "business_review": {
+          "id": "11-suning-risk-channel-index",
+          "verdict": "acceptable",
+          "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+          "checks": [
+            {
+              "expectation": "工商主体必须确认",
+              "status": "pass",
+              "evidence": "工商=苏宁易购集团股份有限公司/91320000608950987L"
+            },
+            {
+              "expectation": "司法风险维度或开庭记录至少一项真实非空",
+              "status": "pass",
+              "evidence": "风险集合=1/20"
+            },
+            {
+              "expectation": "渠道关联搜索返回或分类样本至少一项真实非空",
+              "status": "pass",
+              "evidence": "渠道样本=['11', '710015', '575045']"
+            },
+            {
+              "expectation": "渠道关系状态明确为待核或已核事实",
+              "status": "pass",
+              "evidence": "关系核验状态=关联搜索结果未逐条确认与目标法人的关系"
+            },
+            {
+              "expectation": "不推断现金流、账期能力或准入结论",
+              "status": "pass",
+              "evidence": "risk/channel 两域均至少一项 data、无 error；风险域开庭画像有实际数据，其他风险子项可为 empty；报告未输出现金流/账期/准入结论"
+            }
+          ],
+          "issues": [],
+          "evidence_binding": {
+            "report.json": "a779f75354e74e5d017898c3c8c10ae6da8bf6dedaf68bbe1bbfe12e89e1a1a9",
+            "report.html": "2b03a0d3e9e60a841e49da5a5d840a4926e51243d41cd38863707a37c944b6c8",
+            "report.md": "49ef3c04149b3146bf3a305bf06daa5e26a9bd179238d7b0464f598bd4e9614d",
+            "calls.json": "bc0f25ff1d90c629ef7998b74f1a71f33e8aaa0eb3fe43facd418a0af1640fef",
+            "result.json": "325d4b84ec6e581afd860f4830f4ce321be57f8b7618abe060d8056c586f4d89",
+            "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+          }
+        }
+      }
+    },
+    {
+      "scenario": {
+        "id": "03-channel-coverage",
+        "title": "渠道覆盖型供应商评估",
+        "user_request": "评估美的集团股份有限公司的渠道竞争力、工厂能力和财务稳健信号。",
+        "purpose": "判断家电供应商的渠道与供货基础。",
+        "args": [
+          "--enterprise",
+          "美的集团股份有限公司",
+          "--keyword-type",
+          "name"
+        ],
+        "expected_checks": [
+          "渠道数量与同行对比口径清楚",
+          "工厂和经营数据相互独立",
+          "财务稳健不由注册资本单独决定",
+          "风险明细无虚构补全"
+        ],
+        "limitations": [
+          "渠道数据不等于实际销售份额",
+          "财务结论不替代审计报告"
+        ]
+      },
+      "result": {
+        "schema_version": 1,
+        "skill": "supplier-evaluation-skill",
+        "case_id": "03-channel-coverage",
+        "title": "渠道覆盖型供应商评估",
+        "invocation_id": "1793069200036649000",
+        "provenance": {
+          "integrator_id": "683e574805537ace146cc05e",
+          "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+          "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+          "scenario_sha256": "c100bb25b3cb73e9eebbda3f8ec17f17ae40afd639bfdd5aa7b46a9bf3213d22",
+          "skill_source_hashes": {
+            "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+            "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+            "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+            "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+            "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+            "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+            "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+            "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+          },
+          "upstream_source_hashes": {
+            "enterprise-mcp-server": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          },
+          "upstream_dependency_hashes": {
+            "enterprise-mcp-server/server/mcp_server.py": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+            "enterprise-risk-mcp-server/server/mcp_server.py": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+            "enterprise-operation-mcp-server/server/mcp_server.py": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+            "factory-channel-mcp-server/server/mcp_server.py": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+            "factory-insight-mcp-server/server/mcp_server.py": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+            "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+          }
+        },
+        "source_changed_during_run": false,
+        "started_at": "2026-10-27T10:46:40+08:00",
+        "elapsed_seconds": 12.265,
+        "returncode": 0,
+        "exception_type": null,
+        "command": "python3 supplier-evaluation-skill/scripts/compose_fusion_report.py --enterprise '美的集团股份有限公司' --keyword-type name --output supplier-evaluation-skill/output/live-replaced-20261027/03-channel-coverage/report.json --report-output supplier-evaluation-skill/output/live-replaced-20261027/03-channel-coverage/report.html",
+        "transport": "local MCP servers via loopback streamable-http",
+        "cache_used": false,
+        "call_count": 22,
+        "successful_data_calls": 18,
+        "empty_calls": 4,
+        "failed_calls": 0,
+        "checks": {
+          "issues": [],
+          "warnings": [],
+          "coverage_pct": 69,
+          "subject": {
+            "enterprise": "美的集团股份有限公司",
+            "match_raw": "美的集团股份有限公司",
+            "resolved": true,
+            "resolve_reason": "工商基础信息中的企业名称和统一社会信用代码已返回"
+          },
+          "title": "美的集团股份有限公司 供应商评估报告",
+          "data_mode": "live_mcp",
+          "metrics": [
+            {
+              "label": "上游风险评分",
+              "value": "100",
+              "hint": "上游原始口径；若与司法事件数量冲突，不作为低风险背书"
+            },
+            {
+              "label": "对外投资",
+              "value": "134",
+              "hint": "关联方数量（风险传导面）"
+            },
+            {
+              "label": "注册资本",
+              "value": "人民币 76.06亿",
+              "hint": "工商登记注册资本"
+            },
+            {
+              "label": "融资轮次",
+              "value": "10",
+              "hint": "历史融资轮次"
+            },
+            {
+              "label": "数据产品账期标签",
+              "value": "低",
+              "hint": "上游数据产品原始标签；不代表财务稳健或账期可控"
+            },
+            {
+              "label": "在招岗位",
+              "value": "5961",
+              "hint": "招聘平台公开数量；不代表产能或履约能力"
+            },
+            {
+              "label": "开庭公告",
+              "value": "900",
+              "hint": "诉讼开庭记录总数"
+            },
+            {
+              "label": "股东数量",
+              "value": "14",
+              "hint": "工商公示股东数"
+            },
+            {
+              "label": "成立年限",
+              "value": "26 年",
+              "hint": "成立于 2000 年"
+            }
+          ],
+          "quality_report": {
+            "total_sections": 13,
+            "populated_sections": 9,
+            "empty_sections": 4,
+            "coverage_pct": 69,
+            "data_sources": 6,
+            "cross_insights": 3
+          },
+          "unregistered_tools": [],
+          "checks": {
+            "json_html_markdown": true,
+            "explicit_live": true,
+            "tool_calls_recorded": 22,
+            "offline_scripts": true,
+            "independent_rerender": true,
+            "offline_browser": true
+          }
+        },
+        "status": "passed",
+        "source_hashes": {
+          "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+          "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+          "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+          "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+          "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+          "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+          "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+          "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+        },
+        "technical_status": "passed",
+        "audited_at": "2026-10-27T11:13:04+08:00",
+        "evidence_binding": {
+          "report.json": "868b917b86568b8b3bf6029012e6600cea3f016944af436f0fd6d99f28a1d245",
+          "report.html": "eb508a59a1ca18d45dc233c761e6fcbf866e69842c4aec2d471a37e6688d06b5",
+          "report.md": "cea901bb3edb4311a8b073d629c5e3ab5a30ef19ae334e50ad89d8e761554f7c",
+          "calls.json": "5546e891f6c58801fe182f7f9d85095c39959d95fef60d3b4cde3f048680d30e",
+          "result.json": "cea30320fa23dba18bfed3936b1c138f7f8806237b1775f2ba4c32ddf5316099",
+          "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+        },
+        "business_review": {
+          "id": "03-channel-coverage",
+          "verdict": "acceptable",
+          "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+          "checks": [
+            {
+              "expectation": "渠道数量与同行对比口径清楚",
+              "status": "pass",
+              "evidence": "渠道仅列关联搜索4、财务/销售分类样本0，并明确关系未逐条确认、无同行分母、不作领先或覆盖结论。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+            },
+            {
+              "expectation": "工厂和经营数据相互独立",
+              "status": "pass",
+              "evidence": "工厂只列产品70且声明核心产能缺失；经营另列人员、营业额、融资10与上榜10。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+            },
+            {
+              "expectation": "财务稳健不由注册资本单独决定",
+              "status": "pass",
+              "evidence": "洞察明确缺审计财务、现金流、应收账款账龄和偿债指标，不能由账期标签或资本信息评价稳健。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+            },
+            {
+              "expectation": "风险明细无虚构补全",
+              "status": "pass",
+              "evidence": "20条开庭样本按上游字段展示，缺案号/主体/日期使用“-”且明确无法逐案去重。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+            }
+          ],
+          "issues": [],
+          "evidence_binding": {
+            "report.json": "868b917b86568b8b3bf6029012e6600cea3f016944af436f0fd6d99f28a1d245",
+            "report.html": "eb508a59a1ca18d45dc233c761e6fcbf866e69842c4aec2d471a37e6688d06b5",
+            "report.md": "cea901bb3edb4311a8b073d629c5e3ab5a30ef19ae334e50ad89d8e761554f7c",
+            "calls.json": "5546e891f6c58801fe182f7f9d85095c39959d95fef60d3b4cde3f048680d30e",
+            "result.json": "cea30320fa23dba18bfed3936b1c138f7f8806237b1775f2ba4c32ddf5316099",
+            "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+          }
+        }
+      }
+    }
+  ]
+}

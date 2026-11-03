@@ -1,0 +1,870 @@
+[
+  {
+    "tool": "recruitment_employer_profile",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 0.57,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "benefitList",
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords",
+      "recruitingTypes",
+      "truncatedFields"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 10205
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 7498.2520870396
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 1006.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 1006.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 1008
+      },
+      {
+        "path": "truncatedFields.recruitingCities.total",
+        "value": 303
+      },
+      {
+        "path": "truncatedFields.recruitingCities.returned",
+        "value": 50
+      }
+    ],
+    "response_sha256": "feadd1ed0bb6936eade6f4f391118d9cebbeffbdd2543329c699c83ecb27ef5b"
+  },
+  {
+    "tool": "recruitment_trend",
+    "domain": "recruitment",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 0.572,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingCurrentCount",
+        "value": 1006.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 1006.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 1008
+      },
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 10205
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 7498.2520870396
+      }
+    ],
+    "response_sha256": "e079274081ace44f750ba1117853e72b877fe62c7d1989f38c75fcb37424ccb4"
+  },
+  {
+    "tool": "channel_insight_channel_analysis",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 0.809,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "financialStat",
+      "salesStat"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "financialStat.categoryCount",
+        "value": 0
+      },
+      {
+        "path": "salesStat.categoryCount",
+        "value": 0
+      }
+    ],
+    "response_sha256": "9088e941929112c8ca49b4c57fbba87f290efbda97502d3266581b3e70b4b2b4"
+  },
+  {
+    "tool": "channel_insight_channel_search",
+    "domain": "channel",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 0.81,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "factory_insight_factory_profile",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 0.985,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "accountPeriodRisk",
+      "factoryScale",
+      "factoryTypeList",
+      "foundTime",
+      "name",
+      "nameId",
+      "regCapital"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "regCapital.value",
+        "value": 7247395805.0
+      }
+    ],
+    "response_sha256": "0b8fbdf84f93f4b7173bd2ec35a826bc865b27e93c33acbb71a8eb05a3ef4021"
+  },
+  {
+    "tool": "factory_insight_factory_capabilities",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 0.991,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "enterpriseCertification"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "58b6a9deedc5b6cb52a726e1def7d51aef8ab6b72fc90b0d96149079ce119e88"
+  },
+  {
+    "tool": "factory_insight_factory_product_stats",
+    "domain": "factory",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 0.992,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "mainProductCount"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "mainProductCount",
+        "value": 23
+      }
+    ],
+    "response_sha256": "c605e9290c2e75b70c749552656e572ee5446ed64b1e6c935879abe9c37f2adf"
+  },
+  {
+    "tool": "operation_insight_business_scale",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.054,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "annualTurnover",
+      "enterpriseScale"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "7c05a4d3bcd474b7963faa2bcced12f8a2be0b1d908d323dfe3d894da56b4354"
+  },
+  {
+    "tool": "operation_insight_financing_info",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.059,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "fpFinancingCount",
+      "fpFinancingList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "fpFinancingCount",
+        "value": 9
+      }
+    ],
+    "response_sha256": "d7e696c939d4c82271af6402234c75bad39803e32f857e585f4cfd94428aa01e"
+  },
+  {
+    "tool": "operation_insight_company_trends",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.062,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "isStaffExpandIn3Month"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "isStaffExpandIn3Month",
+        "value": 1
+      }
+    ],
+    "response_sha256": "7c3cb8961ec93ed96473490fbad81488379bc2f15862ab27b876eb388cf93eb5"
+  },
+  {
+    "tool": "operation_insight_enterprise_rankings",
+    "domain": "operation",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name",
+      "pageSize": 10
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.063,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 37,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].rankingListYear",
+        "value": 2024
+      },
+      {
+        "path": "resultList[0].rank",
+        "value": 488
+      },
+      {
+        "path": "resultList[1].rankingListYear",
+        "value": 2024
+      },
+      {
+        "path": "resultList[1].rank",
+        "value": 133
+      },
+      {
+        "path": "resultList[2].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[2].rank",
+        "value": 479
+      },
+      {
+        "path": "resultList[3].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[3].rank",
+        "value": 138
+      },
+      {
+        "path": "resultList[4].rankingListYear",
+        "value": 2023
+      },
+      {
+        "path": "resultList[4].rank",
+        "value": 131
+      },
+      {
+        "path": "total",
+        "value": 37
+      }
+    ],
+    "response_sha256": "d79f2a2c1ed980c7500cc14eb8acd22b6d8a9cfa870ee1e50d7c37df207576f7"
+  },
+  {
+    "tool": "enterprise_risk_insight_score",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.796,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "risk_level",
+      "risk_reason",
+      "risk_score"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "risk_score",
+        "value": 100
+      }
+    ],
+    "response_sha256": "28d083848c160c21a977d6c585b21235c02302d2e09c5e1f82e546e0d11b85c6"
+  },
+  {
+    "tool": "risk_insight_litigation_risk_profile",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.799,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "caKaitingList",
+      "caKaitingTotal",
+      "caLianList",
+      "caLianTotal",
+      "caList",
+      "caTotal",
+      "edTotal",
+      "enforcementTotal",
+      "jdList",
+      "jdTotal",
+      "limitedTotal"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "caKaitingTotal",
+        "value": 26
+      },
+      {
+        "path": "caLianTotal",
+        "value": 3
+      },
+      {
+        "path": "caTotal",
+        "value": 13
+      },
+      {
+        "path": "edTotal",
+        "value": 0
+      },
+      {
+        "path": "enforcementTotal",
+        "value": 0
+      },
+      {
+        "path": "jdTotal",
+        "value": 25
+      },
+      {
+        "path": "limitedTotal",
+        "value": 0
+      }
+    ],
+    "response_sha256": "9d145ef3624d34efe6655088ab92af5815a4082f424c7a84e82008b9e654ad6c"
+  },
+  {
+    "tool": "enterprise_get_enterprise_base_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "立讯精密工业股份有限公司"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.802,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "base_info",
+      "desc",
+      "tag"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "base_info.regCapital.value",
+        "value": 7247395805.0
+      },
+      {
+        "path": "tag.hasStock",
+        "value": 1
+      },
+      {
+        "path": "tag.isAnomaly",
+        "value": 0
+      },
+      {
+        "path": "tag.isHighTechEnterprise",
+        "value": 1
+      },
+      {
+        "path": "tag.isTopEnterprise",
+        "value": 1
+      }
+    ],
+    "response_sha256": "c2d4712ab5cd28df5e38bc3a5c28611547e6fc3f37a41b4f106b47824e061b80"
+  },
+  {
+    "tool": "risk_insight_court_hearings",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.803,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 20,
+    "reported_total": 26,
+    "numeric_evidence": [
+      {
+        "path": "total",
+        "value": 26
+      }
+    ],
+    "response_sha256": "6ec290aef220d7fd34754930b68edea6b12adf548a1fea40788e10bf673e2574"
+  },
+  {
+    "tool": "risk_insight_penalties",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.805,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "punishmentCount",
+      "punishmentList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "punishmentCount",
+        "value": 1
+      }
+    ],
+    "response_sha256": "1c6abe9f352569c0026f760b67507fbdc30bc39b82c82c73f5ca0ab5a26efba1"
+  },
+  {
+    "tool": "risk_insight_business_anomalies",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.807,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_consumption_restrictions",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name",
+      "pageSize": 20
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.81,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "risk_insight_chattel_mortgage",
+    "domain": "risk",
+    "arguments": {
+      "matchKeyword": "立讯精密工业股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.812,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "enterprise_get_enterprise_holder_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "立讯精密工业股份有限公司"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.814,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "holderList",
+      "stockHolderList"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "holderList[0].payAmount.value",
+        "value": 0
+      },
+      {
+        "path": "holderList[0].ratio",
+        "value": 0.999221
+      },
+      {
+        "path": "holderList[0].subscriptionDetail.amount",
+        "value": 7078783996.0
+      },
+      {
+        "path": "holderList[1].payAmount.value",
+        "value": 0
+      },
+      {
+        "path": "holderList[1].ratio",
+        "value": 0.000779
+      },
+      {
+        "path": "holderList[1].subscriptionDetail.amount",
+        "value": 5517481.0
+      },
+      {
+        "path": "stockHolderList[0].shareHolding",
+        "value": 2732000000.0
+      },
+      {
+        "path": "stockHolderList[0].shareHoldingRatio",
+        "value": 0.3536
+      },
+      {
+        "path": "stockHolderList[1].shareHolding",
+        "value": 578000000.0
+      },
+      {
+        "path": "stockHolderList[1].shareHoldingRatio",
+        "value": 0.0749
+      },
+      {
+        "path": "stockHolderList[2].shareHolding",
+        "value": 46742400.0
+      },
+      {
+        "path": "stockHolderList[2].shareHoldingRatio",
+        "value": 0.0064
+      },
+      {
+        "path": "stockHolderList[3].shareHolding",
+        "value": 43723500.0
+      },
+      {
+        "path": "stockHolderList[3].shareHoldingRatio",
+        "value": 0.006
+      },
+      {
+        "path": "stockHolderList[4].shareHolding",
+        "value": 30405100.0
+      },
+      {
+        "path": "stockHolderList[4].shareHoldingRatio",
+        "value": 0.0042
+      }
+    ],
+    "response_sha256": "e976c7d8d2a962181faeb513121dea3a0ab03b2a813ce27f3d4fea661ea51612"
+  },
+  {
+    "tool": "enterprise_get_enterprise_invest_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "立讯精密工业股份有限公司"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.818,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 50,
+    "reported_total": 54,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[0].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[0].regCapital.value",
+        "value": 2490459672.0
+      },
+      {
+        "path": "resultList[0].subscriptionAmount.value",
+        "value": 2490459672.0
+      },
+      {
+        "path": "resultList[1].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[1].regCapital.value",
+        "value": 46558765.1
+      },
+      {
+        "path": "resultList[1].subscriptionAmount.value",
+        "value": 46558765.1
+      },
+      {
+        "path": "resultList[2].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[2].regCapital.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[2].subscriptionAmount.value",
+        "value": 100000000.0
+      },
+      {
+        "path": "resultList[3].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[3].regCapital.value",
+        "value": 2320000000.0
+      },
+      {
+        "path": "resultList[3].subscriptionAmount.value",
+        "value": 2320000000.0
+      },
+      {
+        "path": "resultList[4].isListed",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].ratio",
+        "value": 1.0
+      },
+      {
+        "path": "resultList[4].regCapital.value",
+        "value": 1300000000.0
+      },
+      {
+        "path": "resultList[4].subscriptionAmount.value",
+        "value": 1300000000.0
+      },
+      {
+        "path": "total",
+        "value": 54
+      }
+    ],
+    "response_sha256": "4411a91905a48bae24e86be9c9ca4c3c4ed378d02753ef4f070179e1f1bce7d2"
+  },
+  {
+    "tool": "enterprise_get_enterprise_main_person_info",
+    "domain": "enterprise",
+    "arguments": {
+      "keyword": "立讯精密工业股份有限公司"
+    },
+    "invocation_id": "1793069197397377000",
+    "elapsed_seconds": 1.819,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 10,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].relatedEnterpriseCurrentNum",
+        "value": 13
+      },
+      {
+        "path": "resultList[0].relatedEnterpriseHistoryNum",
+        "value": 9
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseCurrentNum",
+        "value": 21
+      },
+      {
+        "path": "resultList[1].relatedEnterpriseHistoryNum",
+        "value": 15
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseCurrentNum",
+        "value": 2
+      },
+      {
+        "path": "resultList[2].relatedEnterpriseHistoryNum",
+        "value": 1
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseCurrentNum",
+        "value": 7
+      },
+      {
+        "path": "resultList[3].relatedEnterpriseHistoryNum",
+        "value": 8
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseCurrentNum",
+        "value": 1
+      },
+      {
+        "path": "resultList[4].relatedEnterpriseHistoryNum",
+        "value": 2
+      },
+      {
+        "path": "total",
+        "value": 10
+      }
+    ],
+    "response_sha256": "1e60b7f09fcc66162da8e51a6f7bf8e2f6ecbe716f916ae4d9dbeb383e852c50"
+  }
+]

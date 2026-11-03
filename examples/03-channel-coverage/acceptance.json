@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "skill": "supplier-evaluation-skill",
+  "case_id": "03-channel-coverage",
+  "title": "渠道覆盖型供应商评估",
+  "invocation_id": "1793069200036649000",
+  "provenance": {
+    "integrator_id": "683e574805537ace146cc05e",
+    "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+    "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+    "scenario_sha256": "c100bb25b3cb73e9eebbda3f8ec17f17ae40afd639bfdd5aa7b46a9bf3213d22",
+    "skill_source_hashes": {
+      "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+      "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+      "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+      "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+      "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+      "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+      "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+      "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+    },
+    "upstream_source_hashes": {
+      "enterprise-mcp-server": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+      "enterprise-risk-mcp-server": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+      "enterprise-operation-mcp-server": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+      "factory-channel-mcp-server": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+      "factory-insight-mcp-server": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+      "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    },
+    "upstream_dependency_hashes": {
+      "enterprise-mcp-server/server/mcp_server.py": "09953383194a4e48706af21c2c5b2c6e728f20df35c8c8c2f53c8d8f6c81e722",
+      "enterprise-risk-mcp-server/server/mcp_server.py": "4746f577771186ab453261234ba8cd230cae4398d4a2780776019aecf5b2cc6b",
+      "enterprise-operation-mcp-server/server/mcp_server.py": "46af6307784e60a051c16fb45a890979a4c994ff26c50af6cec85b3117619a49",
+      "factory-channel-mcp-server/server/mcp_server.py": "55be95e05414b7598447c482f6128a02da60ea7f9adfd59a75bdc4aebd36a888",
+      "factory-insight-mcp-server/server/mcp_server.py": "f6544c7f4f36b58023cd94a1f6b415772dc361a6202d670f3f88e4816542547d",
+      "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    }
+  },
+  "source_changed_during_run": false,
+  "started_at": "2026-10-27T10:46:40+08:00",
+  "elapsed_seconds": 12.265,
+  "returncode": 0,
+  "exception_type": null,
+  "command": "python3 supplier-evaluation-skill/scripts/compose_fusion_report.py --enterprise '美的集团股份有限公司' --keyword-type name --output supplier-evaluation-skill/output/live-replaced-20261027/03-channel-coverage/report.json --report-output supplier-evaluation-skill/output/live-replaced-20261027/03-channel-coverage/report.html",
+  "transport": "local MCP servers via loopback streamable-http",
+  "cache_used": false,
+  "call_count": 22,
+  "successful_data_calls": 18,
+  "empty_calls": 4,
+  "failed_calls": 0,
+  "checks": {
+    "issues": [],
+    "warnings": [],
+    "coverage_pct": 69,
+    "subject": {
+      "enterprise": "美的集团股份有限公司",
+      "match_raw": "美的集团股份有限公司",
+      "resolved": true,
+      "resolve_reason": "工商基础信息中的企业名称和统一社会信用代码已返回"
+    },
+    "title": "美的集团股份有限公司 供应商评估报告",
+    "data_mode": "live_mcp",
+    "metrics": [
+      {
+        "label": "上游风险评分",
+        "value": "100",
+        "hint": "上游原始口径；若与司法事件数量冲突，不作为低风险背书"
+      },
+      {
+        "label": "对外投资",
+        "value": "134",
+        "hint": "关联方数量（风险传导面）"
+      },
+      {
+        "label": "注册资本",
+        "value": "人民币 76.06亿",
+        "hint": "工商登记注册资本"
+      },
+      {
+        "label": "融资轮次",
+        "value": "10",
+        "hint": "历史融资轮次"
+      },
+      {
+        "label": "数据产品账期标签",
+        "value": "低",
+        "hint": "上游数据产品原始标签；不代表财务稳健或账期可控"
+      },
+      {
+        "label": "在招岗位",
+        "value": "5961",
+        "hint": "招聘平台公开数量；不代表产能或履约能力"
+      },
+      {
+        "label": "开庭公告",
+        "value": "900",
+        "hint": "诉讼开庭记录总数"
+      },
+      {
+        "label": "股东数量",
+        "value": "14",
+        "hint": "工商公示股东数"
+      },
+      {
+        "label": "成立年限",
+        "value": "26 年",
+        "hint": "成立于 2000 年"
+      }
+    ],
+    "quality_report": {
+      "total_sections": 13,
+      "populated_sections": 9,
+      "empty_sections": 4,
+      "coverage_pct": 69,
+      "data_sources": 6,
+      "cross_insights": 3
+    },
+    "unregistered_tools": [],
+    "checks": {
+      "json_html_markdown": true,
+      "explicit_live": true,
+      "tool_calls_recorded": 22,
+      "offline_scripts": true,
+      "independent_rerender": true,
+      "offline_browser": true
+    }
+  },
+  "status": "passed",
+  "source_hashes": {
+    "scripts/common.py": "c3d8fb668be405dc770b4444b8bc654256de595efd5be818a8eb680d77dc3861",
+    "scripts/compose_direct.py": "b1011a2f7fb389373d56e9ca46db7615b525cbdd2bcb93d47cf01616469cdb11",
+    "scripts/compose_fusion_report.py": "6ae782f0cf22335b270b8ac4462de39b01965125794f8c6062601aafc212d3b8",
+    "scripts/cross_analysis.py": "ea231a9b1ec76810cd7c958640fa82ded37f95340bf580f198d2157b27ddc523",
+    "scripts/fusion_engine.py": "d50fecf6e3365bf639690a025011934a761cae1dc709ad1a9effb5bf93f409d3",
+    "scripts/mcp_orchestration.py": "801d415342e97fefedd2399e6af7de880e7695d44c0443faab13567bcaeaac17",
+    "scripts/multi_mcp_client.py": "34a1cc39332e945a66416569cc3daffe19653fdc6dca9706bd7282d4d0dea0cb",
+    "scripts/render_report.py": "4de739638ac7557b4c14e64805a08fdbc52e9230e36c814b1aab9cfab6919e82"
+  },
+  "technical_status": "passed",
+  "audited_at": "2026-10-27T11:13:04+08:00",
+  "evidence_binding": {
+    "report.json": "868b917b86568b8b3bf6029012e6600cea3f016944af436f0fd6d99f28a1d245",
+    "report.html": "eb508a59a1ca18d45dc233c761e6fcbf866e69842c4aec2d471a37e6688d06b5",
+    "report.md": "cea901bb3edb4311a8b073d629c5e3ab5a30ef19ae334e50ad89d8e761554f7c",
+    "calls.json": "5546e891f6c58801fe182f7f9d85095c39959d95fef60d3b4cde3f048680d30e",
+    "result.json": "cea30320fa23dba18bfed3936b1c138f7f8806237b1775f2ba4c32ddf5316099",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  },
+  "business_review": {
+    "id": "03-channel-coverage",
+    "verdict": "acceptable",
+    "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+    "checks": [
+      {
+        "expectation": "渠道数量与同行对比口径清楚",
+        "status": "pass",
+        "evidence": "渠道仅列关联搜索4、财务/销售分类样本0，并明确关系未逐条确认、无同行分母、不作领先或覆盖结论。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+      },
+      {
+        "expectation": "工厂和经营数据相互独立",
+        "status": "pass",
+        "evidence": "工厂只列产品70且声明核心产能缺失；经营另列人员、营业额、融资10与上榜10。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+      },
+      {
+        "expectation": "财务稳健不由注册资本单独决定",
+        "status": "pass",
+        "evidence": "洞察明确缺审计财务、现金流、应收账款账龄和偿债指标，不能由账期标签或资本信息评价稳健。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+      },
+      {
+        "expectation": "风险明细无虚构补全",
+        "status": "pass",
+        "evidence": "20条开庭样本按上游字段展示，缺案号/主体/日期使用“-”且明确无法逐案去重。 当前第五轮result.started_at=2026-10-26T18:45:29+08:00，invocation_id=1793011529316788000；calls=22，HTML/MD均含当前标题。；本轮当前产物：technical=passed，successful_data_calls=18；subject.enterprise=美的集团股份有限公司，resolved=True；metrics[上游风险评分=100；对外投资=134；注册资本=人民币 76.06亿；融资轮次=10；数据产品账期标签=低；在招岗位=5961；开庭公告=900；股东数量=14；成立年限=26 年]；quality={'total_sections': 13, 'populated_sections': 9, 'empty_sections': 4, 'coverage_pct': 69, 'data_sources': 6, 'cross_insights': 3}；非空章节=['供应商概况', '工厂平台返回线索', '渠道关联搜索事实', '股东出资结构', '对外投资清单（关联方敞口）', '风险维度统计', '开庭公告明细', '经营规模与资本运作', '招聘公开统计']；代表记录=3；calls[recruitment:recruitment_trend=data；recruitment:recruitment_employer_profile=data；channel:channel_insight_channel_search=data(4/4)；channel:channel_insight_channel_analysis=data；factory:factory_insight_factory_profile=data；factory:factory_insight_factory_capabilities=data；factory:factory_insight_factory_product_stats=data；operation:operation_insight_business_scale=data；operation:operation_insight_financing_info=data；operation:operation_insight_company_trends=data；operation:operation_insight_enterprise_rankings=data(10/77)；enterprise:enterprise_get_enterprise_base_info=data；enterprise:enterprise_get_enterprise_holder_info=data；enterprise:enterprise_get_enterprise_invest_info=data(50/134)；enterprise:enterprise_get_enterprise_main_person_info=data(10/10)；risk:enterprise_risk_insight_score=data；risk:risk_insight_litigation_risk_profile=data；risk:risk_insight_court_hearings=data(20/900)；risk:risk_insight_penalties=empty；risk:risk_insight_business_anomalies=empty；risk:risk_insight_chattel_mortgage=empty；risk:risk_insight_consumption_restrictions=empty]"
+      }
+    ],
+    "issues": [],
+    "evidence_binding": {
+      "report.json": "868b917b86568b8b3bf6029012e6600cea3f016944af436f0fd6d99f28a1d245",
+      "report.html": "eb508a59a1ca18d45dc233c761e6fcbf866e69842c4aec2d471a37e6688d06b5",
+      "report.md": "cea901bb3edb4311a8b073d629c5e3ab5a30ef19ae334e50ad89d8e761554f7c",
+      "calls.json": "5546e891f6c58801fe182f7f9d85095c39959d95fef60d3b4cde3f048680d30e",
+      "result.json": "cea30320fa23dba18bfed3936b1c138f7f8806237b1775f2ba4c32ddf5316099",
+      "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+    }
+  }
+}

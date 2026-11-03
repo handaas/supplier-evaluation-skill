@@ -1,0 +1,41 @@
+{
+  "id": "11-suning-risk-channel-index",
+  "verdict": "acceptable",
+  "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+  "checks": [
+    {
+      "expectation": "工商主体必须确认",
+      "status": "pass",
+      "evidence": "工商=苏宁易购集团股份有限公司/91320000608950987L"
+    },
+    {
+      "expectation": "司法风险维度或开庭记录至少一项真实非空",
+      "status": "pass",
+      "evidence": "风险集合=1/20"
+    },
+    {
+      "expectation": "渠道关联搜索返回或分类样本至少一项真实非空",
+      "status": "pass",
+      "evidence": "渠道样本=['11', '710015', '575045']"
+    },
+    {
+      "expectation": "渠道关系状态明确为待核或已核事实",
+      "status": "pass",
+      "evidence": "关系核验状态=关联搜索结果未逐条确认与目标法人的关系"
+    },
+    {
+      "expectation": "不推断现金流、账期能力或准入结论",
+      "status": "pass",
+      "evidence": "risk/channel 两域均至少一项 data、无 error；风险域开庭画像有实际数据，其他风险子项可为 empty；报告未输出现金流/账期/准入结论"
+    }
+  ],
+  "issues": [],
+  "evidence_binding": {
+    "report.json": "a779f75354e74e5d017898c3c8c10ae6da8bf6dedaf68bbe1bbfe12e89e1a1a9",
+    "report.html": "2b03a0d3e9e60a841e49da5a5d840a4926e51243d41cd38863707a37c944b6c8",
+    "report.md": "49ef3c04149b3146bf3a305bf06daa5e26a9bd179238d7b0464f598bd4e9614d",
+    "calls.json": "bc0f25ff1d90c629ef7998b74f1a71f33e8aaa0eb3fe43facd418a0af1640fef",
+    "result.json": "325d4b84ec6e581afd860f4830f4ce321be57f8b7618abe060d8056c586f4d89",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}

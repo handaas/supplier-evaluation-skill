@@ -1,0 +1,41 @@
+{
+  "id": "10-byd-expansion-signal-audit",
+  "verdict": "acceptable",
+  "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+  "checks": [
+    {
+      "expectation": "工商主体必须确认",
+      "status": "pass",
+      "evidence": "工商=比亚迪股份有限公司/91440300192317458F"
+    },
+    {
+      "expectation": "招聘域至少一个实际字段非空",
+      "status": "pass",
+      "evidence": "招聘=['126960', '126960', '7863 元/月']"
+    },
+    {
+      "expectation": "经营规模或融资域至少一个实际字段非空",
+      "status": "pass",
+      "evidence": "经营=['10000人以上', '10亿以上', '7', '10']"
+    },
+    {
+      "expectation": "工厂平台产品或认证线索至少一项非空",
+      "status": "pass",
+      "evidence": "工厂=[\"['CCC', 'ISO9000\\\\\\\\ISO140000?OHSAS18000?QC080000?RoHS']\", '305']"
+    },
+    {
+      "expectation": "招聘和经营不得被等同实际产能或稳定履约",
+      "status": "pass",
+      "evidence": "recruitment/operation/factory=data/data/data，未将信号写成实际产能/稳定履约"
+    }
+  ],
+  "issues": [],
+  "evidence_binding": {
+    "report.json": "13f4354822f7b33c39c31774aeb98b2273dde07c4ab6b2dbeacb479d463223e6",
+    "report.html": "866795e0393fe1acf5670856d823c2878ad405bbe324f7a8a085d6b07ceb7c53",
+    "report.md": "ae2512361690ab6c18cdc652e8a36095c6ed1270ea9a042455688b1e993198a4",
+    "calls.json": "398afd54ee4956126731bdf29996821df2fa445312f1ab7c4138c05d3248213f",
+    "result.json": "6f8fed9b6708aa24dbfcfa13193d37e80dc851972bae22eca00298da9ee98d98",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}

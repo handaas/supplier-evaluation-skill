@@ -1,0 +1,77 @@
+{
+  "run_id": "live-replaced-20261027",
+  "cases": [
+    {
+      "skill": "supplier-evaluation-skill",
+      "id": "09-luxshare-prescreen-gap-register",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "a38cc460c5f952e7c89e5c697bfd58967a0dc15f8ca0aff784bc01ec74549acf",
+        "report.html": "ee0ce28ddb780fec61dea50a36f7b066d11bf00c77119ee9e07e3a149c651cf7",
+        "report.md": "8e907cc269736bb7ae46c6e55eb0dc05439498c331e5f02770055fe86cd9744c",
+        "calls.json": "655904a4978d736a6e9ebe5a7eb65a0dd34f1b9aa7873a9e4d71a24df863de6c",
+        "result.json": "d383593e2e30a2b8bf7fb3a7c1c049d67dca03f38a32da4618c83317ed768bb7",
+        "audit.json": "da89f128b29f42fd44923d99edd57f12429aa8599a6570784f9d675746414f65",
+        "acceptance.json": "494fbed67015f6282c186a5e34f14e152ce95f0bba7c183439d633bd15c49301",
+        "business-review.json": "e3e0128becd88f19898d3a30ef2fc17f5a88ba08dba0a87ece62c59337ed147e",
+        "browser-check.json": "6519c078c9f159f37ab9708e8c65e49f65a3552a95b799ebfd800fd0be307294"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/09-luxshare-prescreen-gap-register.md"
+    },
+    {
+      "skill": "supplier-evaluation-skill",
+      "id": "10-byd-expansion-signal-audit",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "13f4354822f7b33c39c31774aeb98b2273dde07c4ab6b2dbeacb479d463223e6",
+        "report.html": "866795e0393fe1acf5670856d823c2878ad405bbe324f7a8a085d6b07ceb7c53",
+        "report.md": "ae2512361690ab6c18cdc652e8a36095c6ed1270ea9a042455688b1e993198a4",
+        "calls.json": "398afd54ee4956126731bdf29996821df2fa445312f1ab7c4138c05d3248213f",
+        "result.json": "6f8fed9b6708aa24dbfcfa13193d37e80dc851972bae22eca00298da9ee98d98",
+        "audit.json": "ac9c3eda7f28dea035b2b4bc372b5726cf313ec6a1d34f4a0c7236f797457ece",
+        "acceptance.json": "a1842b6e92c4dbfad17bf05a313c8efdf1ca23f8f8e08c1618d05e3d007cb77f",
+        "business-review.json": "5ef358deb6ce862b3b24a681407c5eddd6a377e5d3c31842d44a43ce310ab958",
+        "browser-check.json": "478a220b0fbc056910f0c6c5dae14e5cdbbb2bd68cabfefd9eea7e1addfe788c"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/10-byd-expansion-signal-audit.md"
+    },
+    {
+      "skill": "supplier-evaluation-skill",
+      "id": "11-suning-risk-channel-index",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "a779f75354e74e5d017898c3c8c10ae6da8bf6dedaf68bbe1bbfe12e89e1a1a9",
+        "report.html": "2b03a0d3e9e60a841e49da5a5d840a4926e51243d41cd38863707a37c944b6c8",
+        "report.md": "49ef3c04149b3146bf3a305bf06daa5e26a9bd179238d7b0464f598bd4e9614d",
+        "calls.json": "bc0f25ff1d90c629ef7998b74f1a71f33e8aaa0eb3fe43facd418a0af1640fef",
+        "result.json": "325d4b84ec6e581afd860f4830f4ce321be57f8b7618abe060d8056c586f4d89",
+        "audit.json": "f2876f5471576f707b0b618c0ada52f6617e0a349a11efd0c7812f09f4e12d54",
+        "acceptance.json": "ba6847f76785fa25e27b8aa8b1fd460594e39c681c8b34ecca9aa3b3aa653035",
+        "business-review.json": "31c16ceb48a2b3ac04fcff436698601ed3f269a36fe7b28f7056e8ac124b7ae7",
+        "browser-check.json": "fa7b609ebeb0ba82b7fbdb3bed7e84581ce514dc8e80f789d121ccc22a2aac5a"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/11-suning-risk-channel-index.md"
+    },
+    {
+      "skill": "supplier-evaluation-skill",
+      "id": "03-channel-coverage",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "868b917b86568b8b3bf6029012e6600cea3f016944af436f0fd6d99f28a1d245",
+        "report.html": "eb508a59a1ca18d45dc233c761e6fcbf866e69842c4aec2d471a37e6688d06b5",
+        "report.md": "cea901bb3edb4311a8b073d629c5e3ab5a30ef19ae334e50ad89d8e761554f7c",
+        "calls.json": "5546e891f6c58801fe182f7f9d85095c39959d95fef60d3b4cde3f048680d30e",
+        "result.json": "cea30320fa23dba18bfed3936b1c138f7f8806237b1775f2ba4c32ddf5316099",
+        "audit.json": "80deb9ba55c20c59335626c960f167c485a844279a7b1c64817ce429abc0a86c",
+        "acceptance.json": "dd48003f68443f6c0f83364757cad4520009c21b0caf4dafefc781be4c37c715",
+        "business-review.json": "c785c3e1116bdd71fe2953f2ed0fec8d84d4c0095359f2eeda7f8ded8924daf2",
+        "browser-check.json": "41304b4f150a6ab7e16bf515689360dae32238f7528f176cfc0ae5061ee8935b"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/03-channel-coverage.md"
+    }
+  ]
+}

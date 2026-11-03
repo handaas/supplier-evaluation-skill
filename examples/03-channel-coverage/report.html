@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:," />
-  <title>富士康科技集团有限公司 供应商评估报告</title>
+  <title>美的集团股份有限公司 供应商评估报告</title>
   <style>
     :root { --bg:#eef1f5; --card:#ffffff; --text:#1f2937; --muted:#64748b; --line:#d8dee8; --blue:#003b71; --deep:#003b71; --red:#7f1d1d; --gold:#d97706; --stripe:#666; }
     * { box-sizing:border-box; letter-spacing:0 !important; }
@@ -145,6 +145,7 @@
     .chart-box-gauge { max-width:380px; }
     .chart-title { margin:0 0 8px; color:#0b3768; font-size:15px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
     .chart-canvas { width:100%; height:300px; }
+    .chart-canvas[data-chart-state="waiting"],.chart-canvas[data-chart-state="error"] { display:flex; align-items:center; justify-content:center; color:#64748b; font-size:13px; text-align:center; }
     .chart-box-gauge .chart-canvas { height:240px; }
     .chart-data { margin-top:10px; }
     .chart-data summary { cursor:pointer; color:#0b5ca8; font-size:12px; font-weight:700; padding:4px 0; }
@@ -212,16 +213,70 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 </script>
   <script>
 (function(){
-  window.__echarts_instances=[];
+  if(window.__handaas_boot_charts){window.__handaas_boot_charts();return;}
+  window.__echarts_instances=window.__echarts_instances||[];
+  var status=window.__handaas_chart_status={state:'waiting',total:0,ready:0,failed:0};
+  var timer=null, retries=0, MAX_RETRIES=100;
+  var layoutRetries=0, MAX_LAYOUT_RETRIES=50;
+  var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
+  var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  function summarize(nodes){
+    status.total=nodes.length;status.ready=0;status.failed=0;
+    nodes.forEach(function(el){
+      if(el.getAttribute('data-chart-state')==='ready'){status.ready++;}
+      else if(el.getAttribute('data-chart-state')==='error'){status.failed++;}
+    });
+    status.state=status.ready===status.total?'ready':
+      (status.ready+status.failed===status.total?(status.ready?'degraded':'error'):'waiting');
+  }
+  function raf(fn){if(window.requestAnimationFrame){window.requestAnimationFrame(fn);}else{fn();}}
   function boot(){
-    if(typeof echarts==='undefined'){return;}
-    var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
-    var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
-    document.querySelectorAll('.chart-canvas').forEach(function(el){
-      var raw=el.getAttribute('data-spec'); if(!raw){return;}
-      var spec; try{spec=JSON.parse(raw.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));}catch(e){return;}
-      var chart=echarts.init(el,null,{renderer:'svg'});
-      window.__echarts_instances.push(chart);
+    if(document.readyState==='loading'){return;}
+    var nodes=document.querySelectorAll('.chart-canvas');
+    if(!nodes.length){summarize(nodes);return;}
+    if(!window.echarts || typeof window.echarts.init!=='function'){
+      var exhausted=retries>=MAX_RETRIES;
+      nodes.forEach(function(el){
+        if(el.__handaas_chart_ready){return;}
+        el.__handaas_dependency_error=true;
+        el.setAttribute('data-chart-state',exhausted?'error':'waiting');
+        el.textContent=exhausted?'图表库加载失败或不可用，请查看数据明细或重新生成离线报告。':'图表库正在加载，数据明细仍可查看。';
+      });
+      summarize(nodes);
+      if(!exhausted && timer===null){
+        retries++;
+        timer=setTimeout(function(){timer=null;boot();},100);
+      }
+      return;
+    }
+    if(timer!==null){clearTimeout(timer);timer=null;}
+    var pendingLayout=0;
+    nodes.forEach(function(el){
+      if(el.__handaas_chart_ready){return;}
+      if(el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error){return;}
+      if(window.ResizeObserver && !el.__handaas_resize_observer){
+        el.__handaas_resize_observer=new ResizeObserver(function(){
+          var current=el.__handaas_chart;
+          if(current && typeof current.resize==='function'){try{current.resize();}catch(ignored){}}
+          else{boot();}
+        });
+        el.__handaas_resize_observer.observe(el);
+      }
+      if((el.getClientRects && el.getClientRects().length===0) || el.clientWidth<2 || el.clientHeight<2){
+        el.setAttribute('data-chart-state','waiting');
+        el.textContent='图表等待布局完成后渲染，数据明细仍可查看。';
+        pendingLayout++;
+        return;
+      }
+      var chart=null;
+      try{
+        var raw=el.getAttribute('data-spec');
+        if(!raw){throw new Error('Missing chart configuration');}
+        // getAttribute already decodes HTML entities; a second decode corrupts labels.
+        var spec=JSON.parse(raw);
+        if(['line','bar','pie','gauge','radar'].indexOf(spec.type)<0){throw new Error('Unsupported chart type');}
+        el.textContent='';
+        chart=window.echarts.init(el,null,{renderer:'svg'});
       var opt={color:PALETTE,tooltip:{trigger: spec.type==='pie'?'item':'axis'},textStyle:{fontFamily:FONTS,fontSize:12,color:'#334155'},grid:{left:48,right:24,top:30,bottom:40},legend:{top:0,textStyle:{fontSize:11}}};
       if(spec.type==='line'){
         opt.xAxis={type:'category',data:spec.x,axisLabel:{fontSize:11,interval:0,rotate: spec.x && spec.x.length>6?35:0}};
@@ -247,14 +302,47 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         opt.radar={indicator:spec.indicators,radius:'62%',axisName:{color:'#475569',fontSize:11},splitArea:{areaStyle:{color:['#f8fbff','#eef4fb']}}};
         opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
       }
-      chart.setOption(opt);
-      window.addEventListener('resize',function(){chart.resize();});
+        chart.setOption(opt);
+        el.__handaas_chart=chart;
+        el.__handaas_chart_ready=true;
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','ready');
+        window.__echarts_instances.push(chart);
+        raf(function(){try{chart.resize();}catch(ignored){}});
+      }catch(e){
+        if(chart && typeof chart.dispose==='function'){try{chart.dispose();}catch(ignored){}}
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','error');
+        el.textContent='图表绘制失败，请查看数据明细。';
+      }
     });
+    summarize(nodes);
+    if(pendingLayout && layoutRetries<MAX_LAYOUT_RETRIES){
+      layoutRetries++;
+      setTimeout(boot,100);
+    }
   }
-  if(document.readyState!=='loading'){boot();}else{document.addEventListener('DOMContentLoaded',boot);}
+  window.__handaas_boot_charts=boot;
   window.__echarts_resize_all=function(){
     (window.__echarts_instances||[]).forEach(function(c){try{c.resize();}catch(e){}});
   };
+  function bootAfterLayout(){
+    raf(function(){boot();window.__echarts_resize_all();});
+  }
+  window.addEventListener('resize',window.__echarts_resize_all);
+  window.addEventListener('load',bootAfterLayout);
+  window.addEventListener('pageshow',bootAfterLayout);
+  window.addEventListener('handaas:echarts-ready',bootAfterLayout);
+  window.addEventListener('orientationchange',bootAfterLayout);
+  // A very late external script can still recover after the bounded retry ends.
+  document.addEventListener('load',function(event){
+    if(event.target && event.target.tagName==='SCRIPT'){boot();}
+  },true);
+  document.addEventListener('DOMContentLoaded',bootAfterLayout);
+  document.addEventListener('visibilitychange',boot);
+  if(document.fonts && document.fonts.ready){document.fonts.ready.then(function(){window.__echarts_resize_all();});}
+  [0,300,1000,2500].forEach(function(ms){setTimeout(function(){boot();window.__echarts_resize_all();},ms);});
+  boot();
 })();
 </script>
 </head>
@@ -264,52 +352,51 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     <div class="cover-grid">
       <aside class="cover-side">
         <h2 class="cover-side-title">供应商评估报告</h2>
-        <p class="cover-date">2026年08月10日</p>
+        <p class="cover-date">2026年10月27日</p>
         <h3 class="toc-title">目录</h3>
         <ol class="toc-list"><li><span>报告摘要</span></li><li><span>查询对象与口径</span></li><li><span>数据总览</span></li><li><span>核心分析</span></li><li><span>代表性记录</span></li><li><span>特征与洞察</span></li></ol>
         <h3 class="scope-title">报告口径</h3>
-        <div class="biz-scope"><div class="biz-scope-item"><span>匹配对象</span><strong>富士康科技集团有限公司</strong></div><div class="biz-scope-item"><span>匹配方式</span><strong>供应商评估（直接聚合 6 个 MCP：工商/风险/经营/渠道/工厂/招聘）</strong></div><div class="biz-scope-item"><span>数据范围</span><strong>覆盖 6/6 大数据源，12 个明细章节，3 条跨维度洞察</strong></div><div class="biz-scope-item"><span>局限说明</span><strong>供应商评估结论基于多维公开数据交叉分析；建议结合实地考察与财务审计综合决策。</strong></div></div>
+        <div class="biz-scope"><div class="biz-scope-item"><span>匹配对象</span><strong>美的集团股份有限公司</strong></div><div class="biz-scope-item"><span>匹配方式</span><strong>供应商评估（直接聚合 6 个 MCP：工商/风险/经营/渠道/工厂/招聘）</strong></div><div class="biz-scope-item"><span>数据范围</span><strong>覆盖 6/6 大数据源，9 个明细章节，3 条跨维度洞察</strong></div><div class="biz-scope-item"><span>局限说明</span><strong>未确认主体时所有返回仅为具名检索线索；已确认主体时也仅整理公开事实，不生成自定义评分；工厂平台字段、渠道关系及目标行业适用性需逐条核验，并结合实地考察与财务审计决策。</strong></div></div>
       </aside>
       <section class="cover-main">
         <p class="report-kicker">SUPPLIER EVALUATION</p>
-        <h1>富士康科技集团有限公司 供应商评估报告</h1>
-        <p class="report-lead">本报告以「富士康科技集团有限公司」为评估对象，直接聚合工商、风险、经营、渠道、工厂、招聘 6 大数据源的多维原始数据，供应商综合评分 50.0（结论：附条件准入）。供应商专项评分均值 50.0，存在 0 项需关注事项（），建议设置风险缓释条款或降低合作规模</p>
-        <div class="abstract-box">报告涵盖查询对象、数据总览、核心分析、代表性记录与结构洞察，所有数据均标注口径与来源。</div>
-        <div class="biz-metrics"><div class="biz-metric"><span class="m-name">综合风险评分</span><span class="m-tag t-down">低风险</span><span class="m-value">100</span></div><div class="biz-metric"><span class="m-name">对外投资</span><span class="m-tag"></span><span class="m-value">39</span></div><div class="biz-metric"><span class="m-name">供应商综合评分</span><span class="m-tag t-neutral">附条件准入</span><span class="m-value">50.0</span></div><div class="biz-metric"><span class="m-name">注册资本</span><span class="m-tag"></span><span class="m-value">美元 1.69亿</span></div><div class="biz-metric"><span class="m-name">账期风险</span><span class="m-tag"></span><span class="m-value">低</span></div><div class="biz-metric"><span class="m-name">在招岗位</span><span class="m-tag"></span><span class="m-value">489</span></div><div class="biz-metric"><span class="m-name">开庭公告</span><span class="m-tag"></span><span class="m-value">217</span></div><div class="biz-metric"><span class="m-name">股东数量</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric"><span class="m-name">成立年限</span><span class="m-tag"></span><span class="m-value">28 年</span></div><div class="biz-metric"><span class="m-name">合规健康度</span><span class="m-tag"></span><span class="m-value">100</span></div><div class="biz-metric"><span class="m-name">财务稳健性</span><span class="m-tag"></span><span class="m-value">50</span></div><div class="biz-metric"><span class="m-name">风险隔离度</span><span class="m-tag"></span><span class="m-value">0</span></div></div>
-        <ul class="exec-list"><li>供应商专项评分均值 50.0，存在 0 项需关注事项（），建议设置风险缓释条款或降低合作规模。</li><li>供货与风险数据有限，建议结合实地考察综合评估交付能力。</li><li>财务稳健性一般，建议结合更多维度数据综合评估。</li><li>产能与经营规模数据匹配，产能布局与业务规模基本协调。建议关注产能利用率与订单波动匹配度。</li></ul>
-        <div class="cover-findings"><h3 class="cover-findings-title">核心发现</h3><div class="cover-findings-grid"><div class="finding-card"><p class="f-label">供货能力与风险匹配度</p><p class="f-text">产能与渠道数据有限，风险评分 100（低风险）。</p></div><div class="finding-card"><p class="f-label">账期风险与财务稳健性</p><p class="f-text">账期风险「低」。</p></div><div class="finding-card"><p class="f-label">产能与经营规模匹配度</p><p class="f-text">工厂规模「大型」、人员规模 10000人以上、年营业额 10亿以上。</p></div></div></div>
-        <div class="cover-dimensions"><span class="dim-label">分析维度</span><div class="dim-tags"><span class="dim-tag">供应商综合评分</span><span class="dim-tag">供应商专项评分雷达</span><span class="dim-tag">供应商概况</span><span class="dim-tag">供货能力</span><span class="dim-tag">股东出资结构</span><span class="dim-tag">对外投资清单（关联方敞口）</span><span class="dim-tag">供应商专项评分矩阵</span><span class="dim-tag">综合风险评分</span><span class="dim-tag">风险维度统计</span><span class="dim-tag">开庭公告明细</span><span class="dim-tag">经营规模与资本运作</span><span class="dim-tag">招聘与扩张活跃度</span></div></div>
-        <div class="cover-scope-bar"><span class="scope-item"><em>数据产品</em>企业大数据、企业风险洞察、企业经营分析、渠道洞察、工厂洞察、招聘大数据</span><span class="scope-item"><em>覆盖范围</em>覆盖 6/6 大数据源，12 个明细章节，3 条跨维度洞察</span></div>
+        <h1>美的集团股份有限公司 供应商评估报告</h1>
+        <p class="report-lead">本报告以「美的集团股份有限公司」为评估对象，直接聚合工商、风险、经营、渠道、工厂、招聘 6 大数据源的多维原始数据，发现 1 项重大风险阻断项：开庭公告 900 条，需人工司法核验。发现需人工核验的司法或合规线索：开庭公告 900 条，需人工司法核验；不生成自定义综合或专项评分</p>
+        <div class="abstract-box">报告涵盖查询对象、数据总览、代表性记录与结构洞察，所有数据均标注口径与来源。</div>
+        <div class="biz-metrics"><div class="biz-metric"><span class="m-name">上游风险评分</span><span class="m-tag"></span><span class="m-value">100</span></div><div class="biz-metric"><span class="m-name">对外投资</span><span class="m-tag"></span><span class="m-value">134</span></div><div class="biz-metric"><span class="m-name">注册资本</span><span class="m-tag"></span><span class="m-value">人民币 76.06亿</span></div><div class="biz-metric"><span class="m-name">融资轮次</span><span class="m-tag"></span><span class="m-value">10</span></div><div class="biz-metric"><span class="m-name">数据产品账期标签</span><span class="m-tag"></span><span class="m-value">低</span></div><div class="biz-metric"><span class="m-name">在招岗位</span><span class="m-tag"></span><span class="m-value">5961</span></div><div class="biz-metric"><span class="m-name">开庭公告</span><span class="m-tag"></span><span class="m-value">900</span></div><div class="biz-metric"><span class="m-name">股东数量</span><span class="m-tag"></span><span class="m-value">14</span></div><div class="biz-metric"><span class="m-name">成立年限</span><span class="m-tag"></span><span class="m-value">26 年</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div>
+        <ul class="exec-list"><li>发现需人工核验的司法或合规线索：开庭公告 900 条，需人工司法核验；不生成自定义综合或专项评分。</li><li>司法暴露触发人工核验门禁，不予供应商综合评级。</li><li>缺少审计财务、现金流、应收账款账龄和偿债指标，不能据此评价财务稳健或宣称账期风险可控。</li><li>该数据来自渠道关联搜索/统计，记录与目标法人的关系尚未逐条确认；不作渠道领先、覆盖能力或供货能力结论。</li></ul>
+        <div class="cover-findings"><h3 class="cover-findings-title">核心发现</h3><div class="cover-findings-grid"><div class="finding-card"><p class="f-label">供货证据与司法暴露</p><p class="f-text">核心产能字段未知、开庭 900 条、限高 0 条。</p></div><div class="finding-card"><p class="f-label">资本与账期公开线索</p><p class="f-text">数据产品账期标签「低」、融资记录 10 轮。</p></div><div class="finding-card"><p class="f-label">渠道关联搜索事实</p><p class="f-text">渠道关联搜索返回 4 条、财务分类样本 0、销售分类样本 0。</p></div></div></div>
+        <div class="cover-dimensions"><span class="dim-label">分析维度</span><div class="dim-tags"><span class="dim-tag">供应商概况</span><span class="dim-tag">工厂平台返回线索</span><span class="dim-tag">渠道关联搜索事实</span><span class="dim-tag">股东出资结构</span><span class="dim-tag">对外投资清单（关联方敞口）</span><span class="dim-tag">风险维度统计</span><span class="dim-tag">开庭公告明细</span><span class="dim-tag">经营规模与资本运作</span><span class="dim-tag">招聘公开统计</span></div></div>
+        <div class="cover-scope-bar"><span class="scope-item"><em>数据产品</em>企业大数据、企业风险洞察、企业经营分析、渠道洞察、工厂洞察、招聘大数据</span><span class="scope-item"><em>覆盖范围</em>覆盖 6/6 大数据源，9 个明细章节，3 条跨维度洞察</span></div>
       </section>
     </div>
   </article>
   <main class="research-doc">
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>报告摘要</h2><p class="biz-section-note">概述分析对象、数据覆盖范围与核心发现。</p></div><span class="biz-tag">Summary</span></div><p class="biz-summary">本报告以「富士康科技集团有限公司」为评估对象，直接聚合工商、风险、经营、渠道、工厂、招聘 6 大数据源的多维原始数据，供应商综合评分 50.0（结论：附条件准入）。供应商专项评分均值 50.0，存在 0 项需关注事项（），建议设置风险缓释条款或降低合作规模</p></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>查询对象与口径</h2><p class="biz-section-note">说明匹配对象、匹配方式与数据范围。</p></div><span class="biz-tag">Caliber</span></div><div class="info-list"><div class="info-row"><span class="info-label">匹配对象</span><span class="info-value">富士康科技集团有限公司</span></div><div class="info-row"><span class="info-label">匹配方式</span><span class="info-value">供应商评估（直接聚合 6 个 MCP：工商/风险/经营/渠道/工厂/招聘）</span></div><div class="info-row"><span class="info-label">数据范围</span><span class="info-value">覆盖 6/6 大数据源，12 个明细章节，3 条跨维度洞察</span></div><div class="info-row"><span class="info-label">局限说明</span><span class="info-value">供应商评估结论基于多维公开数据交叉分析；建议结合实地考察与财务审计综合决策。</span></div></div></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>数据总览</h2><p class="biz-section-note">关键指标一览。</p></div><span class="biz-tag">Metrics</span></div><div class="biz-metrics"><div class="biz-metric"><span class="m-name">综合风险评分</span><span class="m-tag t-down">低风险</span><span class="m-value">100</span></div><div class="biz-metric"><span class="m-name">对外投资</span><span class="m-tag"></span><span class="m-value">39</span></div><div class="biz-metric"><span class="m-name">供应商综合评分</span><span class="m-tag t-neutral">附条件准入</span><span class="m-value">50.0</span></div><div class="biz-metric"><span class="m-name">注册资本</span><span class="m-tag"></span><span class="m-value">美元 1.69亿</span></div><div class="biz-metric"><span class="m-name">账期风险</span><span class="m-tag"></span><span class="m-value">低</span></div><div class="biz-metric"><span class="m-name">在招岗位</span><span class="m-tag"></span><span class="m-value">489</span></div><div class="biz-metric"><span class="m-name">开庭公告</span><span class="m-tag"></span><span class="m-value">217</span></div><div class="biz-metric"><span class="m-name">股东数量</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric"><span class="m-name">成立年限</span><span class="m-tag"></span><span class="m-value">28 年</span></div><div class="biz-metric"><span class="m-name">合规健康度</span><span class="m-tag"></span><span class="m-value">100</span></div><div class="biz-metric"><span class="m-name">财务稳健性</span><span class="m-tag"></span><span class="m-value">50</span></div><div class="biz-metric"><span class="m-name">风险隔离度</span><span class="m-tag"></span><span class="m-value">0</span></div></div></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>核心分析</h2><p class="biz-section-note">按维度展开目标核心数据与结构化明细。</p></div><span class="biz-tag">Analysis</span></div><div class="biz-pair"><div><h3 class="biz-subsection-title">供应商综合评分</h3><p class="biz-section-note">准入结论：附条件准入</p><div class="chart-box chart-box-gauge"><div class="chart-canvas" data-chart="gauge" data-spec="{&quot;type&quot;:&quot;gauge&quot;,&quot;value&quot;:50.0,&quot;max&quot;:100,&quot;level&quot;:&quot;附条件准入&quot;}"></div></div></div><div><h3 class="biz-subsection-title">供应商专项评分雷达</h3><p class="biz-section-note">跨维度交叉评分（3 维）：合规健康度 / 财务稳健性 / 风险隔离度</p><div class="chart-box"><div class="chart-canvas" data-chart="radar" data-spec="{&quot;type&quot;:&quot;radar&quot;,&quot;indicators&quot;:[{&quot;name&quot;:&quot;合规健康度&quot;,&quot;max&quot;:100.0},{&quot;name&quot;:&quot;财务稳健性&quot;,&quot;max&quot;:100.0},{&quot;name&quot;:&quot;风险隔离度&quot;,&quot;max&quot;:100.0}],&quot;series&quot;:[{&quot;name&quot;:&quot;专项评分&quot;,&quot;value&quot;:[100.0,50.0,0.0]}]}"></div></div></div></div>
-<h3 class="biz-subsection-title">供应商概况</h3><div class="info-list"><div class="info-row"><span class="info-label">工厂规模</span><span class="info-value">大型</span></div><div class="info-row"><span class="info-label">工厂地址</span><span class="info-value">{&#x27;city&#x27;: &#x27;厦门市&#x27;, &#x27;province&#x27;: &#x27;福建省&#x27;, &#x27;value&#x27;: &#x27;福建厦门福建 厦门 嘉禾路281号台亚大厦1501室&#x27;}</span></div><div class="info-row"><span class="info-label">注册资本</span><span class="info-value">美元 1.69亿</span></div><div class="info-row"><span class="info-label">账期风险</span><span class="info-value">低</span></div><div class="info-row"><span class="info-label">主要产品数</span><span class="info-value">81</span></div><div class="info-row"><span class="info-label">企业名称</span><span class="info-value">富士康科技集团有限公司</span></div><div class="info-row"><span class="info-label">统一社会信用代码</span><span class="info-value">914403007084307436</span></div><div class="info-row"><span class="info-label">法定代表人</span><span class="info-value">崔志成</span></div><div class="info-row"><span class="info-label">企业类型</span><span class="info-value">有限责任公司(外国法人独资)</span></div><div class="info-row"><span class="info-label">行业</span><span class="info-value">制造业 / 专用设备制造业 / 化工、木材、非金属加工专用设备制造 / 模具制造</span></div><div class="info-row"><span class="info-label">成立日期</span><span class="info-value">1998-08-03</span></div><div class="info-row"><span class="info-label">经营状态</span><span class="info-value">营业</span></div><div class="info-row"><span class="info-label">注册地址</span><span class="info-value">深圳市龙华区龙华街道东环二路2号</span></div><div class="info-row"><span class="info-label">经营范围</span><span class="info-value">一般经营项目热水器、光学、计量、检测仪器仪表、智能遥控器、电子加热元器件、电源分配器、电源转换接插座、五金塑胶制品、精密模具、各类计算机机箱、微型计算机、便携式计算机、笔记本计算机、多媒体计算机和服务器、数据通信多媒体系统、新型显示器、家用电热器具及装置、新型电力电子元器件、电线及电缆组件、电源供应器、电脑主机板、光电子专用材料、光电器材、有源及无源元器件、传感器、单模光纤及支撑通信网的新技术设备、通信及网络用相关卡板、光盘驱动器、多媒体电脑用视频信号录制和重放设备、数字音视频系统(不含电视机及国家限制产品)、精密陶瓷产品、光通讯陶瓷套管、光电夹工具、光电制造设备、塑料及其制品、数字照相机及关键件、复印机、无线电话、电子专用设备(含手机制造设备、半导体制造设备、LCD面板制造设备)、投影机、锡膏、液晶数字电视机、自动化接口设备、移动电话、多媒体电话、卫星导航定位接收设备、智能型电子玩具、…</span></div></div>
-<h3 class="biz-subsection-title">供货能力</h3><div class="info-list"><div class="info-row"><span class="info-label">产线数</span><span class="info-value">-</span></div><div class="info-row"><span class="info-label">普工人数</span><span class="info-value">-</span></div><div class="info-row"><span class="info-label">质检人数</span><span class="info-value">-</span></div><div class="info-row"><span class="info-label">主要设备</span><span class="info-value">-</span></div><div class="info-row"><span class="info-label">管理体系认证</span><span class="info-value">-</span></div><div class="info-row"><span class="info-label">月产能</span><span class="info-value">-</span></div><div class="info-row"><span class="info-label">服务品牌数</span><span class="info-value">-</span></div><div class="info-row"><span class="info-label">主要产品数</span><span class="info-value">81</span></div></div>
-<h3 class="biz-subsection-title">股东出资结构</h3><p class="biz-section-note">股东持股比例与实缴情况（资本充实性核查基础）</p><div class="table-wrap"><table><thead><tr><th>股东名称</th><th>持股比例</th><th>认缴金额</th><th>实缴金额</th><th>股东类型</th></tr></thead><tbody><tr><td>雅佳控股有限公司</td><td>100.0%</td><td>人民币 1.69亿</td><td>美元 2万</td><td>外国（地区）企业</td></tr></tbody></table></div>
-<h3 class="biz-subsection-title">对外投资清单（关联方敞口）</h3><p class="biz-section-note">共 39 家对外投资（展示前 15 家），风险可能经关联方传导</p><div class="table-wrap"><table><thead><tr><th>被投资企业</th><th>持股比例</th><th>经营状态</th><th>成立日期</th><th>注册资本</th></tr></thead><tbody><tr><td>深圳市富龙小额贷款有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2017-01-13</td><td>人民币 6.00亿</td></tr><tr><td>优尔鸿信检测技术(深圳)有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2017-09-21</td><td>人民币 1500万</td></tr><tr><td>南京富腾新能源汽车科技有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2021-01-12</td><td>人民币 5300万</td></tr><tr><td>鸿鼎管理顾问(深圳)有限公司</td><td>100%</td><td>营业 &gt; 存续</td><td>2017-08-14</td><td>人民币 600万</td></tr><tr><td>上海鹏瞻投资有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2008-05-22</td><td>人民币 5000万</td></tr><tr><td>富士康智慧农业(深圳)有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2022-04-29</td><td>人民币 100万</td></tr><tr><td>鸿驰咨询顾问(深圳)有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2017-08-14</td><td>人民币 1100万</td></tr><tr><td>富金通网络科技服务(上海)有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2014-06-06</td><td>人民币 1000万</td></tr><tr><td>富韵声学科技(深圳)有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2021-02-20</td><td>人民币 7250万</td></tr><tr><td>深圳市金机虎投资控股有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2014-08-29</td><td>人民币 1.27亿</td></tr><tr><td>深圳市富鸿杰科技服务有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2006-08-28</td><td>人民币 800万</td></tr><tr><td>上海富金通商业保理有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2013-12-12</td><td>人民币 5.53亿</td></tr><tr><td>嘉兴智谐商贸有限公司</td><td>90%</td><td>营业 &gt; 存续</td><td>2010-07-08</td><td>人民币 3.78亿</td></tr><tr><td>深圳市鼎威信息科技有限公司</td><td>85%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2018-04-27</td><td>人民币 425万</td></tr><tr><td>上海富士康有限公司</td><td>78%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2006-01-06</td><td>人民币 3.35亿</td></tr></tbody></table></div>
-<h3 class="biz-subsection-title">供应商专项评分矩阵</h3><p class="biz-section-note">跨维度交叉评分（供货能力 / 合规健康度 / 财务稳健性 / 风险隔离度）</p><div class="table-wrap"><table><thead><tr><th>评估维度</th><th>评分</th><th>等级</th></tr></thead><tbody><tr><td>合规健康度</td><td>100</td><td>优</td></tr><tr><td>财务稳健性</td><td>50</td><td>中</td></tr><tr><td>风险隔离度</td><td>0</td><td>弱</td></tr></tbody></table></div>
-<div class="biz-pair"><div><h3 class="biz-subsection-title">综合风险评分</h3><p class="biz-section-note">风险洞察综合评分（越低越好）</p><div class="chart-box chart-box-gauge"><div class="chart-canvas" data-chart="gauge" data-spec="{&quot;type&quot;:&quot;gauge&quot;,&quot;value&quot;:100.0,&quot;max&quot;:100,&quot;level&quot;:&quot;低风险&quot;}"></div></div></div><div><h3 class="biz-subsection-title">风险维度统计</h3><p class="biz-section-note">各风险维度记录数（供应商合规核查）</p><div class="table-wrap"><table><thead><tr><th>风险维度</th><th>记录数</th></tr></thead><tbody><tr><td>开庭公告</td><td>217</td></tr></tbody></table></div></div></div>
-<h3 class="biz-subsection-title">开庭公告明细</h3><p class="biz-section-note">共 20 条开庭公告（展示前 20 条），案由分布反映诉讼焦点</p><div class="table-wrap"><table><thead><tr><th>案由</th><th>法院</th><th>公告类型</th></tr></thead><tbody><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市中级人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市南山区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>侵害发明专利权纠纷</td><td>最高人民法院</td><td>开庭公告</td></tr><tr><td>侵害发明专利权纠纷</td><td>最高人民法院</td><td>开庭公告</td></tr><tr><td>侵害发明专利权纠纷</td><td>最高人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市中级人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>-</td><td>广东省深圳市龙华区人民法院</td><td>开庭公告</td></tr><tr><td>建设工程合同纠纷</td><td>贵阳市中级人民法院</td><td>开庭公告</td></tr><tr><td>建设工程合同纠纷</td><td>贵阳市中级人民法院</td><td>开庭公告</td></tr><tr><td>建设工程合同纠纷</td><td>贵阳市中级人民法院</td><td>开庭公告</td></tr><tr><td>建设工程合同纠纷</td><td>贵阳市中级人民法院</td><td>开庭公告</td></tr></tbody></table></div>
-<h3 class="biz-subsection-title">经营规模与资本运作</h3><div class="info-list"><div class="info-row"><span class="info-label">人员规模</span><span class="info-value">10000人以上</span></div><div class="info-row"><span class="info-label">年营业额</span><span class="info-value">10亿以上</span></div><div class="info-row"><span class="info-label">上榜记录</span><span class="info-value">1</span></div></div>
-<h3 class="biz-subsection-title">招聘与扩张活跃度</h3><div class="info-list"><div class="info-row"><span class="info-label">当前在招</span><span class="info-value">489</span></div><div class="info-row"><span class="info-label">近三月招聘</span><span class="info-value">489</span></div><div class="info-row"><span class="info-label">平均薪酬</span><span class="info-value">7667 元/月</span></div></div></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>代表性记录</h2><p class="biz-section-note">关键明细记录 Top N。</p></div><span class="biz-tag">Records</span></div><div class="table-wrap"><table><thead><tr><th>维度</th><th>关键记录</th></tr></thead><tbody><tr><td>对外投资</td><td>39 家关联企业（其中 10 家已注销）</td></tr><tr><td>风险评级</td><td>风险评分 100（低风险）</td></tr><tr><td>诉讼记录</td><td>开庭公告 217 条</td></tr></tbody></table></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>报告摘要</h2><p class="biz-section-note">概述分析对象、数据覆盖范围与核心发现。</p></div><span class="biz-tag">Summary</span></div><p class="biz-summary">本报告以「美的集团股份有限公司」为评估对象，直接聚合工商、风险、经营、渠道、工厂、招聘 6 大数据源的多维原始数据，发现 1 项重大风险阻断项：开庭公告 900 条，需人工司法核验。发现需人工核验的司法或合规线索：开庭公告 900 条，需人工司法核验；不生成自定义综合或专项评分</p></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>查询对象与口径</h2><p class="biz-section-note">说明匹配对象、匹配方式与数据范围。</p></div><span class="biz-tag">Caliber</span></div><div class="info-list"><div class="info-row"><span class="info-label">匹配对象</span><span class="info-value">美的集团股份有限公司</span></div><div class="info-row"><span class="info-label">匹配方式</span><span class="info-value">供应商评估（直接聚合 6 个 MCP：工商/风险/经营/渠道/工厂/招聘）</span></div><div class="info-row"><span class="info-label">数据范围</span><span class="info-value">覆盖 6/6 大数据源，9 个明细章节，3 条跨维度洞察</span></div><div class="info-row"><span class="info-label">局限说明</span><span class="info-value">未确认主体时所有返回仅为具名检索线索；已确认主体时也仅整理公开事实，不生成自定义评分；工厂平台字段、渠道关系及目标行业适用性需逐条核验，并结合实地考察与财务审计决策。</span></div></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>数据总览</h2><p class="biz-section-note">关键指标一览。</p></div><span class="biz-tag">Metrics</span></div><div class="biz-metrics"><div class="biz-metric"><span class="m-name">上游风险评分</span><span class="m-tag"></span><span class="m-value">100</span></div><div class="biz-metric"><span class="m-name">对外投资</span><span class="m-tag"></span><span class="m-value">134</span></div><div class="biz-metric"><span class="m-name">注册资本</span><span class="m-tag"></span><span class="m-value">人民币 76.06亿</span></div><div class="biz-metric"><span class="m-name">融资轮次</span><span class="m-tag"></span><span class="m-value">10</span></div><div class="biz-metric"><span class="m-name">数据产品账期标签</span><span class="m-tag"></span><span class="m-value">低</span></div><div class="biz-metric"><span class="m-name">在招岗位</span><span class="m-tag"></span><span class="m-value">5961</span></div><div class="biz-metric"><span class="m-name">开庭公告</span><span class="m-tag"></span><span class="m-value">900</span></div><div class="biz-metric"><span class="m-name">股东数量</span><span class="m-tag"></span><span class="m-value">14</span></div><div class="biz-metric"><span class="m-name">成立年限</span><span class="m-tag"></span><span class="m-value">26 年</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>核心分析</h2><p class="biz-section-note">按维度展开目标核心数据与结构化明细。</p></div><span class="biz-tag">Analysis</span></div><h3 class="biz-subsection-title">供应商概况</h3><div class="info-list"><div class="info-row"><span class="info-label">工厂记录名称</span><span class="info-value">美的集团股份有限公司</span></div><div class="info-row"><span class="info-label">工厂记录主体ID</span><span class="info-value">37622ff00f853a7d</span></div><div class="info-row"><span class="info-label">工厂地址</span><span class="info-value">{&#x27;province&#x27;: &#x27;广东省&#x27;, &#x27;value&#x27;: &#x27;中国广东省顺德美的工业城国内市场部&#x27;}</span></div><div class="info-row"><span class="info-label">主要产品统计数</span><span class="info-value">70</span></div><div class="info-row"><span class="info-label">产能证据状态</span><span class="info-value">产线/人员/设备/月产能未返回，不评价产能</span></div><div class="info-row"><span class="info-label">主体关系状态</span><span class="info-value">需以统一社会信用代码或主体ID人工核验工厂记录归属</span></div><div class="info-row"><span class="info-label">企业名称</span><span class="info-value">美的集团股份有限公司</span></div><div class="info-row"><span class="info-label">统一社会信用代码</span><span class="info-value">91440606722473344C</span></div><div class="info-row"><span class="info-label">法定代表人</span><span class="info-value">方洪波</span></div><div class="info-row"><span class="info-label">企业类型</span><span class="info-value">股份有限公司(上市、自然人投资或控股)</span></div><div class="info-row"><span class="info-label">行业</span><span class="info-value">制造业 / 电气机械和器材制造业 / 家用电力器具制造 / 其他家用电力器具制造</span></div><div class="info-row"><span class="info-label">注册资本</span><span class="info-value">人民币 76.06亿</span></div><div class="info-row"><span class="info-label">成立日期</span><span class="info-value">2000-04-07</span></div><div class="info-row"><span class="info-label">经营状态</span><span class="info-value">营业</span></div><div class="info-row"><span class="info-label">注册地址</span><span class="info-value">佛山市顺德区北滘镇美的大道6号美的总部大楼B区26-28楼</span></div><div class="info-row"><span class="info-label">经营范围</span><span class="info-value">生产经营家用电器、电机及其零部件;中央空调、采暖设备、通风设备、热泵设备、照明设备、燃气设备、压缩机及相关通用设备、专用设备、家用空调设备及其零部件的研发、制造、销售、安装、维修及售后服务;从事家用电器、家电原材料及零配件的进出口、批发及加工业务(不设店铺,不涉及国营贸易管理商品,涉及配额、许可证管理商品的按国家规定办理);信息技术服务;为企业提供投资顾问及管理服务;计算机软件、硬件开发;家电产品的安装、维修及售后服务;工业产品设计;酒店管理;广告代理;物业管理;企业所需的工程和技术研究、开发及其销售和推广;对金融业进行投资(经营范围涉及行政许可的项目须凭有效许可证或批准证明经营)(依法须经批准的项目,经相关部门批准后方可开展经营活动)(依法须经批准的项目,经相关部门批准后方可开展经营活动)</span></div></div>
+<h3 class="biz-subsection-title">工厂平台返回线索</h3><div class="info-list"><div class="info-row"><span class="info-label">主要产品数</span><span class="info-value">70</span></div></div>
+<h3 class="biz-subsection-title">渠道关联搜索事实</h3><div class="info-list"><div class="info-row"><span class="info-label">渠道关联搜索返回数</span><span class="info-value">4</span></div><div class="info-row"><span class="info-label">财务分类样本数</span><span class="info-value">0</span></div><div class="info-row"><span class="info-label">销售分类样本数</span><span class="info-value">0</span></div><div class="info-row"><span class="info-label">关系核验状态</span><span class="info-value">关联搜索结果未逐条确认与目标法人的关系</span></div></div>
+<h3 class="biz-subsection-title">股东出资结构</h3><p class="biz-section-note">股东持股比例与实缴情况（资本充实性核查基础）</p><div class="table-wrap"><table><thead><tr><th>股东名称</th><th>持股比例</th><th>认缴金额</th><th>实缴金额</th><th>股东类型</th></tr></thead><tbody><tr><td>美的控股有限公司</td><td>63.0%</td><td>人民币 22.44亿</td><td>人民币 5.99亿</td><td>企业法人</td></tr><tr><td>融睿股权投资(珠海)合伙企业(有限合伙)</td><td>8.9%</td><td>人民币 3.16亿</td><td>人民币 1.22亿</td><td>企业法人</td></tr><tr><td>方洪波</td><td>3.8%</td><td>人民币 1.37亿</td><td>人民币 3600万</td><td>自然人股东</td></tr><tr><td>天津鼎晖嘉泰股权投资合伙企业(有限合伙)</td><td>3.3%</td><td>人民币 1.17亿</td><td>人民币 3120万</td><td>企业法人</td></tr><tr><td>黄健</td><td>3.2%</td><td>人民币 1.12亿</td><td>人民币 3000万</td><td>自然人股东</td></tr><tr><td>袁利群</td><td>2.5%</td><td>人民币 9075万</td><td>人民币 2400万</td><td>自然人股东</td></tr><tr><td>鼎晖美泰(香港)有限公司</td><td>2.5%</td><td>人民币 9000万</td><td>人民币 2400万</td><td>企业法人</td></tr><tr><td>鼎晖绚彩(香港)有限公司</td><td>2.4%</td><td>人民币 8625万</td><td>人民币 2300万</td><td>企业法人</td></tr><tr><td>黄晓明</td><td>2.2%</td><td>人民币 7709万</td><td>人民币 2000万</td><td>自然人股东</td></tr><tr><td>栗建伟</td><td>2.1%</td><td>人民币 7560万</td><td>人民币 2000万</td><td>自然人股东</td></tr><tr><td>蔡其武</td><td>2.1%</td><td>人民币 7500万</td><td>人民币 2000万</td><td>自然人股东</td></tr><tr><td>宁波美晟股权投资合伙企业</td><td>2.1%</td><td>人民币 7500万</td><td>人民币 1.12亿</td><td>企业法人</td></tr><tr><td>郑伟康</td><td>1.1%</td><td>人民币 3750万</td><td>人民币 1000万</td><td>自然人股东</td></tr><tr><td>佳昭控股有限公司</td><td>0.8%</td><td>人民币 2984万</td><td>人民币 1150万</td><td>企业法人</td></tr></tbody></table></div>
+<h3 class="biz-subsection-title">对外投资清单（关联方敞口）</h3><p class="biz-section-note">报告总量 134 家，当前列表展示 15 家；仅表示关联暴露面，未核验关联方风险传导</p><div class="table-wrap"><table><thead><tr><th>被投资企业</th><th>持股比例</th><th>经营状态</th><th>成立日期</th><th>注册资本</th></tr></thead><tbody><tr><td>广东美创希科技有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2015-07-01</td><td>人民币 1.00亿</td></tr><tr><td>广东美的白色家电技术创新中心有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2017-01-23</td><td>人民币 1.00亿</td></tr><tr><td>广东美的微波炉制造有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2000-01-19</td><td>人民币 4.20亿</td></tr><tr><td>广东美的日用电器进出口贸易有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2000-08-21</td><td>人民币 1.00亿</td></tr><tr><td>安徽美芝制冷设备有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2008-02-28</td><td>人民币 3.25亿</td></tr><tr><td>宁波美的联合物资供应有限公司</td><td>100%</td><td>营业 &gt; 存续</td><td>2011-01-07</td><td>人民币 4.80亿</td></tr><tr><td>美的集团电子商务有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2014-03-03</td><td>人民币 1.00亿</td></tr><tr><td>无锡小天鹅电器有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2019-05-31</td><td>人民币 7.32亿</td></tr><tr><td>广东美芝精密制造有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2004-05-10</td><td>人民币 6406万</td></tr><tr><td>芜湖美的厨房电器制造有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2011-01-28</td><td>人民币 2000万</td></tr><tr><td>佛山市顺德区美的家电实业有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2005-11-25</td><td>人民币 55.00亿</td></tr><tr><td>库卡机器人自动化(广东)股份有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2017-03-03</td><td>人民币 10.04亿</td></tr><tr><td>芜湖美的生活电器制造有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2008-08-07</td><td>人民币 6000万</td></tr><tr><td>美的智联(上海)供应链科技有限公司</td><td>100%</td><td>营业 &gt; 存续(在营、开业、在册)</td><td>2020-09-30</td><td>人民币 9.60亿</td></tr><tr><td>浙江美芝压缩机有限公司</td><td>100%</td><td>营业 &gt; 存续</td><td>2014-01-21</td><td>人民币 5000万</td></tr></tbody></table></div>
+<h3 class="biz-subsection-title">风险维度统计</h3><p class="biz-section-note">各风险维度记录数（供应商合规核查）</p><div class="table-wrap"><table><thead><tr><th>风险维度</th><th>记录数</th></tr></thead><tbody><tr><td>开庭公告</td><td>900</td></tr></tbody></table></div>
+<h3 class="biz-subsection-title">开庭公告明细</h3><p class="biz-section-note">报告总量 900 条（当前展示 20 条）；保留上游案号/日期/主体用于人工去重，缺少案号或日期的记录无法逐案去重</p><div class="table-wrap"><table><thead><tr><th>案号</th><th>案由</th><th>法院</th><th>相关主体</th><th>开庭/发布日期</th><th>公告类型</th><th>去重键状态</th></tr></thead><tbody><tr><td>-</td><td>侵害商标权纠纷</td><td>广东省揭阳市中级人民法院</td><td>-</td><td>2026-10-21</td><td>起诉状副本及开庭传票</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>北京市西城区人民法院</td><td>-</td><td>2026-10-10</td><td>起诉状副本及开庭传票</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>-</td><td>北京市西城区人民法院</td><td>-</td><td>2026-10-10</td><td>起诉状副本及开庭传票</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>上海市徐汇区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>浙江省宁波市中级人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>浙江省金华市永康市人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>北京市西城区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>北京市西城区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>产品责任纠纷</td><td>抚州市金溪县人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>-</td><td>北京知识产权法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>产品责任纠纷</td><td>浙江省绍兴市柯桥区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>产品责任纠纷</td><td>江西省抚州市金溪县人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>浙江省金华市永康市人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>-</td><td>北京知识产权法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>上海市徐汇区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>-</td><td>广东省深圳市南山区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>上海市徐汇区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷</td><td>深圳市龙岗区人民法院</td><td>-</td><td>2026-06-11</td><td>起诉状副本及开庭传票</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵权责任纠纷</td><td>嘉兴市南湖区人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr><tr><td>-</td><td>侵害商标权纠纷,不正当竞争纠纷</td><td>慈溪市人民法院</td><td>-</td><td>-</td><td>开庭公告</td><td>缺少案号或日期，无法逐案去重</td></tr></tbody></table></div>
+<h3 class="biz-subsection-title">经营规模与资本运作</h3><div class="info-list"><div class="info-row"><span class="info-label">人员规模</span><span class="info-value">10000人以上</span></div><div class="info-row"><span class="info-label">年营业额</span><span class="info-value">10亿以上</span></div><div class="info-row"><span class="info-label">融资轮次</span><span class="info-value">10</span></div><div class="info-row"><span class="info-label">上榜记录</span><span class="info-value">10</span></div></div>
+<h3 class="biz-subsection-title">招聘公开统计</h3><div class="info-list"><div class="info-row"><span class="info-label">当前在招</span><span class="info-value">5961</span></div><div class="info-row"><span class="info-label">近三月招聘</span><span class="info-value">5961</span></div><div class="info-row"><span class="info-label">平均薪酬</span><span class="info-value">7317 元/月</span></div></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>代表性记录</h2><p class="biz-section-note">关键明细记录 Top N。</p></div><span class="biz-tag">Records</span></div><div class="table-wrap"><table><thead><tr><th>维度</th><th>关键记录</th></tr></thead><tbody><tr><td>对外投资</td><td>134 家关联企业</td></tr><tr><td>风险评级</td><td>上游风险评分 100（上游原等级与司法记录冲突待核验）</td></tr><tr><td>诉讼记录</td><td>开庭公告 900 条</td></tr></tbody></table></div></section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">供应商评估报告</div></div><div class="biz-section-head"><div><h2>特征与洞察</h2><p class="biz-section-note">基于数据的结构化解读。</p></div><span class="biz-tag">Insights</span></div><div class="structural-feature-grid"><article class="structural-feature-card">
-  <h3>供货能力与风险匹配度</h3>
-  <p class="structural-evidence">产能与渠道数据有限，风险评分 100（低风险）。</p>
-  <p>供货与风险数据有限，建议结合实地考察综合评估交付能力。</p>
+  <h3>供货证据与司法暴露</h3>
+  <p class="structural-evidence">核心产能字段未知、开庭 900 条、限高 0 条。</p>
+  <p>司法暴露触发人工核验门禁，不予供应商综合评级。</p>
 </article><article class="structural-feature-card">
-  <h3>账期风险与财务稳健性</h3>
-  <p class="structural-evidence">账期风险「低」。</p>
-  <p>财务稳健性一般，建议结合更多维度数据综合评估。</p>
+  <h3>资本与账期公开线索</h3>
+  <p class="structural-evidence">数据产品账期标签「低」、融资记录 10 轮。</p>
+  <p>缺少审计财务、现金流、应收账款账龄和偿债指标，不能据此评价财务稳健或宣称账期风险可控。</p>
 </article><article class="structural-feature-card">
-  <h3>产能与经营规模匹配度</h3>
-  <p class="structural-evidence">工厂规模「大型」、人员规模 10000人以上、年营业额 10亿以上。</p>
-  <p>产能与经营规模数据匹配，产能布局与业务规模基本协调。建议关注产能利用率与订单波动匹配度。</p>
+  <h3>渠道关联搜索事实</h3>
+  <p class="structural-evidence">渠道关联搜索返回 4 条、财务分类样本 0、销售分类样本 0。</p>
+  <p>该数据来自渠道关联搜索/统计，记录与目标法人的关系尚未逐条确认；不作渠道领先、覆盖能力或供货能力结论。</p>
 </article></div></section>
     
   </main>

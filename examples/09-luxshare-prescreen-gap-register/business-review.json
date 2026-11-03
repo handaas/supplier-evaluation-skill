@@ -1,0 +1,41 @@
+{
+  "id": "09-luxshare-prescreen-gap-register",
+  "verdict": "acceptable",
+  "summary": "当前冻结产物逐项满足场景契约；结论仅限本轮公开数据和报告口径。",
+  "checks": [
+    {
+      "expectation": "工商主体必须确认",
+      "status": "pass",
+      "evidence": "工商=立讯精密工业股份有限公司/91440300760482233Q"
+    },
+    {
+      "expectation": "工厂平台名称或产品线索至少一项真实非空",
+      "status": "pass",
+      "evidence": "工厂线索=['立讯精密工业股份有限公司', '37622fc02a0537bc', '23']"
+    },
+    {
+      "expectation": "风险维度或风险代表记录至少一项真实非空",
+      "status": "pass",
+      "evidence": "风险集合=2/20/1"
+    },
+    {
+      "expectation": "工厂记录无法映射工商标识时明确待核",
+      "status": "pass",
+      "evidence": "关系核验=True、工厂主体ID=37622fc02a0537bc"
+    },
+    {
+      "expectation": "不输出准入、合格或供货能力推荐",
+      "status": "pass",
+      "evidence": "enterprise/factory/risk 三域均至少一项 data、无 error；风险域的处罚与开庭有实际数据，另有部分风险子项 empty；报告未输出准入/合格/供货推荐"
+    }
+  ],
+  "issues": [],
+  "evidence_binding": {
+    "report.json": "a38cc460c5f952e7c89e5c697bfd58967a0dc15f8ca0aff784bc01ec74549acf",
+    "report.html": "ee0ce28ddb780fec61dea50a36f7b066d11bf00c77119ee9e07e3a149c651cf7",
+    "report.md": "8e907cc269736bb7ae46c6e55eb0dc05439498c331e5f02770055fe86cd9744c",
+    "calls.json": "655904a4978d736a6e9ebe5a7eb65a0dd34f1b9aa7873a9e4d71a24df863de6c",
+    "result.json": "d383593e2e30a2b8bf7fb3a7c1c049d67dca03f38a32da4618c83317ed768bb7",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}
