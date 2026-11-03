@@ -16,12 +16,59 @@ fabricated).
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Mapping, Optional
 
 
 # --------------------------------------------------------------------------- #
 # Tolerant field extraction (handles both live MCP and cached report shapes)
 # --------------------------------------------------------------------------- #
+def source_ratio_percent(value: Any) -> Optional[Decimal]:
+    """Return a percentage as Decimal without rounding; None when unavailable.
+
+    Accepts a 0-1 fraction, an already-percent number, a '12.3456%' string,
+    or a dict. Zero is a real value; only missing/invalid input returns None.
+    """
+    if isinstance(value, dict):
+        value = value.get("value", value.get("ratio", value.get("percent")))
+    if value is None or isinstance(value, bool):
+        return None
+    text = str(value).strip()
+    if not text or text in {"-", "—"}:
+        return None
+    if "%" in text:
+        text = text.replace("%", "").strip()
+    try:
+        number = Decimal(text)
+    except InvalidOperation:
+        return None
+    if number != 0 and abs(number) <= 1:
+        number *= 100
+    return number
+
+
+def format_source_ratio(value: Any) -> str:
+    """Render an upstream ratio without rounding, zero-padding, or unit guessing.
+
+    A percent string such as '12.3400%' is returned verbatim. Numeric 0-1
+    fractions keep their original significant digits (0.123456 -> 12.3456%).
+    Zero renders as '0%'; missing or invalid values render as '-'.
+    """
+    if isinstance(value, dict):
+        value = value.get("value", value.get("ratio", value.get("percent")))
+    if value is None:
+        return "-"
+    text = str(value).strip()
+    if not text or text in {"-", "—"}:
+        return "-"
+    if "%" in text:
+        return text
+    number = source_ratio_percent(value)
+    if number is None:
+        return text
+    return f"{format(number.normalize(), 'f')}%"
+
+
 def _pick(d: Any, *keys: str) -> Any:
     if not isinstance(d, dict):
         return None
@@ -402,12 +449,6 @@ def _holder_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     rows = []
     for h in _holders(data)[:15]:
         ratio = _pick(h, "持股比例", "ratio", "占比")
-        if ratio is not None:
-            try:
-                rf = float(ratio)
-                ratio = f"{rf * 100:.1f}%" if rf <= 1 else f"{rf:.1f}%"
-            except (TypeError, ValueError):
-                pass
         sub = _pick(h, "认缴金额", "subscriptionDetail", "认缴", "认缴/实缴")
         if isinstance(sub, dict):
             sub = sub.get("amount") or sub.get("value")
@@ -417,7 +458,7 @@ def _holder_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
                 "股东名称": str(
                     _pick(h, "股东名称", "name", "名称", "holderName") or "-"
                 ),
-                "持股比例": str(ratio or "-"),
+                "持股比例": format_source_ratio(ratio),
                 "认缴金额": _amount_text(sub),
                 "实缴金额": _amount_text(paid),
                 "股东类型": str(
@@ -462,18 +503,12 @@ def _investment_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     rows = []
     for inv in _investments(data)[:15]:
         iratio = _pick(inv, "ratio", "持股比例", "占股比例", "投资比例")
-        if iratio is not None:
-            try:
-                rf = float(iratio)
-                iratio = f"{rf * 100:.0f}%" if rf <= 1 else f"{rf:.0f}%"
-            except (TypeError, ValueError):
-                pass
         rows.append(
             {
                 "被投资企业": str(
                     _pick(inv, "name", "企业名称", "对外投资企业", "被投资企业") or "-"
                 ),
-                "持股比例": str(iratio or "-"),
+                "持股比例": format_source_ratio(iratio),
                 "经营状态": str(_pick(inv, "operStatus", "经营状态", "状态") or "-"),
                 "成立日期": str(_pick(inv, "foundTime", "成立日期", "成立时间") or "-"),
                 "注册资本": _amount_text(
