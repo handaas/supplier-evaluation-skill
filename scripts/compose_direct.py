@@ -12,7 +12,9 @@ unchanged.
 
 from __future__ import annotations
 
+import ast
 import datetime as dt
+import json
 import sys
 from typing import Any, Dict, List, Mapping, Optional
 
@@ -255,6 +257,56 @@ def _operation_kv(data: Mapping[str, Any]) -> Dict[str, str]:
     return out
 
 
+def _literal(value: Any) -> Any:
+    if isinstance(value, str):
+        stripped = value.strip()
+        if (stripped.startswith("{") and stripped.endswith("}")) or (
+            stripped.startswith("[") and stripped.endswith("]")
+        ):
+            try:
+                return ast.literal_eval(stripped)
+            except (ValueError, SyntaxError):
+                return value
+    return value
+
+
+def _readable_address(value: Any) -> str:
+    obj = _literal(value)
+    if isinstance(obj, dict):
+        prefix = "".join(
+            str(obj.get(k) or "") for k in ("province", "city", "district")
+        )
+        text = (
+            str(obj.get("value") or "")
+            .strip()
+            .replace("中国.", "")
+            .replace("中国", "")
+            .replace(".", "")
+        )
+        if prefix:
+            index = text.rfind(prefix)
+            if index >= 0:
+                base = text[index:]
+                suffix = base[len(prefix) :]
+                city_district = "".join(
+                    str(obj.get(k) or "") for k in ("city", "district")
+                )
+                while city_district and suffix.startswith(city_district):
+                    suffix = suffix[len(city_district) :]
+                return prefix + suffix
+            return prefix
+        if text:
+            return text
+    return str(value) if value not in (None, "", "-") else "-"
+
+
+def _readable_list(value: Any) -> str:
+    obj = _literal(value)
+    if isinstance(obj, (list, tuple, set)):
+        return "；".join(str(x) for x in obj if x not in (None, "", "-"))
+    return str(value) if value not in (None, "", "-") else "-"
+
+
 def _channel_kv(data: Mapping[str, Any]) -> Dict[str, str]:
     channel = _channel(data)
     out: Dict[str, str] = {}
@@ -264,9 +316,9 @@ def _channel_kv(data: Mapping[str, Any]) -> Dict[str, str]:
     financial = channel.get("financialStat") or {}
     sales = channel.get("salesStat") or {}
     if isinstance(financial, dict) and financial.get("categoryCount") is not None:
-        out["财务分类样本数"] = str(financial.get("categoryCount"))
+        out["财务维度同行总数"] = str(financial.get("categoryCount"))
     if isinstance(sales, dict) and sales.get("categoryCount") is not None:
-        out["销售分类样本数"] = str(sales.get("categoryCount"))
+        out["销售维度同行总数"] = str(sales.get("categoryCount"))
     out["关系核验状态"] = "关联搜索结果未逐条确认与目标法人的关系" if out else "-"
     return out
 
@@ -279,7 +331,7 @@ def _factory_kv(data: Mapping[str, Any]) -> Dict[str, str]:
     if factory.get("factoryNameId"):
         out["工厂记录主体ID"] = str(factory["factoryNameId"])
     if factory.get("factoryAddress"):
-        out["工厂地址"] = str(factory["factoryAddress"])
+        out["工厂地址"] = _readable_address(factory["factoryAddress"])
     capacity_known = any(
         _pick(factory, key) not in (None, "", "-")
         for key in (
@@ -313,24 +365,158 @@ def _recruitment_kv(data: Mapping[str, Any]) -> Dict[str, str]:
         v = _i(rec.get(key))
         if v is not None:
             out[label] = str(v)
+    current = _i(rec.get("current"))
+    last3 = _i(rec.get("last_3m"))
+    if current is not None and last3 is not None and current == last3:
+        out["窗口口径"] = (
+            "上游当前值与近三月值相同，两个时间窗口不可区分；"
+            "不能视为两次独立招聘信号"
+        )
     sal = rec.get("avg_salary")
     if sal not in (None, "", "-"):
         try:
-            out["平均薪酬"] = f"{float(str(sal).replace(',', '')):.0f} 元/月"
+            out["平均薪酬"] = f"{float(str(sal).replace(',', '')):.2f} 元/月"
         except (TypeError, ValueError):
             out["平均薪酬"] = str(sal)
     welfare = rec.get("welfare") or []
     if welfare:
-        out["福利项数"] = str(len(welfare))
+        out["福利标签"] = "、".join(str(x) for x in welfare if x)
     return out
 
 
 # --------------------------------------------------------------------------- #
 # Payload assembly
 # --------------------------------------------------------------------------- #
+def _quality_nonempty(value: Any) -> bool:
+    """0/False are real values; only None/''/[]/{} count as empty."""
+    if value is None or value == "":
+        return False
+    if isinstance(value, dict):
+        return any(_quality_nonempty(v) for v in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_quality_nonempty(v) for v in value)
+    return True
+
+
+def _refresh_quality_report(report: Dict[str, Any]) -> None:
+    data_source = report.get("data_source")
+    core = report.get("core_analysis")
+    if not isinstance(data_source, dict) or not isinstance(core, dict):
+        return
+    sections = core.get("sections")
+    if not isinstance(sections, list):
+        return
+    declared = [s for s in sections if isinstance(s, dict)]
+    populated = sum(
+        1 for section in declared if _quality_nonempty(core.get(section.get("key")))
+    )
+    quality = data_source.get("quality_report")
+    if not isinstance(quality, dict):
+        quality = {}
+    # The composer declares every section it attempted before empty bodies are
+    # dropped. Keep that declared total so a review pass cannot turn missing
+    # dimensions into a false 100% coverage; grow it only when a section was
+    # added, and fall back to the current count for foreign payloads.
+    try:
+        previous_total = int(quality.get("total_sections") or 0)
+    except (TypeError, ValueError):
+        previous_total = 0
+    total = max(len(declared), populated, previous_total)
+    quality["total_sections"] = total
+    quality["populated_sections"] = populated
+    quality["empty_sections"] = max(0, total - populated)
+    quality["coverage_pct"] = round(populated / total * 100) if total else 0
+    data_source["quality_report"] = quality
+
+
+def apply_content_review(
+    report: Mapping[str, Any], calls: Any = None
+) -> Dict[str, Any]:
+    """Offline content repair for a frozen supplier-evaluation report."""
+    reviewed = json.loads(json.dumps(report, ensure_ascii=False))
+    old_conflict = "上游原等级与司法记录冲突待核验"
+    new_conflict = "上游风险等级未在报告中保留；司法暴露需人工核验"
+    for key in ("abstract", "summary"):
+        if old_conflict in str(reviewed.get(key) or ""):
+            reviewed[key] = str(reviewed[key]).replace(old_conflict, new_conflict)
+    verdict = reviewed.get("verdict")
+    if isinstance(verdict, dict):
+        for key in ("summary", "level"):
+            if old_conflict in str(verdict.get(key) or ""):
+                verdict[key] = str(verdict[key]).replace(old_conflict, new_conflict)
+    for metric in reviewed.get("metrics") or []:
+        if metric.get("label") == "上游风险评分":
+            metric["hint"] = (
+                "上游原始评分；接口未返回阈值/方向说明，"
+                "存在司法暴露时不得解读为低风险"
+            )
+        if metric.get("label") == "数据产品账期标签" and "上游原始标签" not in str(
+            metric.get("value") or ""
+        ):
+            metric["value"] = f"{metric.get('value')}（上游原始标签）"
+            metric["hint"] = "上游数据产品原始标签；不代表财务稳健或账期可控"
+    for record in reviewed.get("representative_records") or []:
+        if old_conflict in str(record.get("关键记录") or ""):
+            record["关键记录"] = str(record["关键记录"]).replace(
+                old_conflict, new_conflict
+            )
+    core = reviewed.get("core_analysis")
+    if isinstance(core, dict):
+        profile = core.get("se_profile")
+        if isinstance(profile, dict) and profile.get("工厂地址"):
+            profile["工厂地址"] = _readable_address(profile["工厂地址"])
+        clues = core.get("se_factory_platform_clues")
+        if isinstance(clues, dict) and clues.get("管理体系认证"):
+            clues["管理体系认证"] = _readable_list(clues["管理体系认证"])
+        channel = core.get("se_channel")
+        if isinstance(channel, dict):
+            relabeled = {}
+            for key, value in channel.items():
+                if key == "财务分类样本数":
+                    relabeled["财务维度同行总数"] = value
+                elif key == "销售分类样本数":
+                    relabeled["销售维度同行总数"] = value
+                else:
+                    relabeled[key] = value
+            core["se_channel"] = relabeled
+        rec = core.get("se_recruitment")
+        if isinstance(rec, dict):
+            current = _i(rec.get("当前在招"))
+            last3 = _i(rec.get("近三月招聘"))
+            if current is not None and last3 is not None and current == last3:
+                rec["窗口口径"] = (
+                    "上游当前值与近三月值相同，两个时间窗口不可区分；"
+                    "不能视为两次独立招聘信号"
+                )
+            salary = rec.get("平均薪酬")
+            try:
+                rec["平均薪酬"] = f"{float(str(salary).replace(',', '')):.2f} 元/月"
+            except (TypeError, ValueError):
+                pass
+        for section in core.get("sections") or []:
+            if section.get("key") == "se_holders":
+                note = str(section.get("note") or "")
+                extra = "上市/股份公司可能按股份类别返回，不等同自然人股东名单"
+                if extra not in note:
+                    section["note"] = (note + "；" if note else "") + extra
+    for insight in reviewed.get("insights") or []:
+        evidence = str(insight.get("evidence") or "")
+        evidence = evidence.replace("财务分类样本", "财务维度同行总数").replace(
+            "销售分类样本", "销售维度同行总数"
+        )
+        insight["evidence"] = evidence
+    caliber = reviewed.get("caliber")
+    if isinstance(caliber, dict):
+        note = "字段已整理为可读文本；同行总数按上游 categoryCount 口径标注，未新增推断。"
+        if note not in str(caliber.get("limit") or ""):
+            caliber["limit"] = str(caliber.get("limit") or "") + note
+    _refresh_quality_report(reviewed)
+    return reviewed
+
+
 def build_direct_payload(
     enterprise: str, keyword_type: str, *, dry_run: bool, skills_root: str,
-    max_pages: Optional[int] = None,
+    max_pages: Optional[int] = None, calls: Any = None,
 ) -> Dict[str, Any]:
     # 1. Collect multi-source data (live MCP or cached reports)
     data = orch.collect_direct(
@@ -338,6 +524,11 @@ def build_direct_payload(
         detail_max_pages=max_pages,
     )
     meta = data.get("_meta") or {}
+    evidence = calls
+    if evidence is None:
+        evidence = data.get("calls")
+    if evidence is None:
+        evidence = meta.get("calls")
     resolved = meta.get("resolved") or {}
     canon = resolved.get("enterprise") or enterprise
     errors = meta.get("errors") or {}
@@ -402,11 +593,21 @@ def build_direct_payload(
         (_i(_risk(data).get("court_hearings_total")) or 0)
         or (_i(_risk(data).get("restrictions_total")) or 0)
     )
-    risk_level_display = (
-        "上游原等级与司法记录冲突待核验"
-        if judicial_exposure
-        else (_risk(data).get("level") or "-")
-    )
+    upstream_level = str(_risk(data).get("level") or "").strip()
+    if upstream_level:
+        risk_level_display = (
+            f"{upstream_level}（存在司法暴露，需人工核验；不作低风险背书）"
+            if judicial_exposure and not any(
+                token in upstream_level for token in ("高", "严重")
+            )
+            else upstream_level
+        )
+    else:
+        risk_level_display = (
+            "上游未返回风险等级（司法暴露需人工核验）"
+            if judicial_exposure
+            else "上游未返回风险等级"
+        )
     verdict["key_concerns"] = [
         concern
         for concern in verdict.get("key_concerns", [])
@@ -503,7 +704,11 @@ def build_direct_payload(
             for d in (_factory(data).get("mainDeviceList") or [])
             if _effective(d)
         ),
-        "管理体系认证": _pick(_factory(data), "managementSystemCertification"),
+        "管理体系认证": _readable_list(
+            _pick(_factory(data), "managementSystemCertification")
+        )
+        if _pick(_factory(data), "managementSystemCertification")
+        else None,
         "月产能": _pick(_factory(data), "monthlyProductionAmountValue_caps"),
         "服务品牌数": _i(_factory(data).get("serviceBrandCount")),
         "主要产品数": _i(_factory(data).get("mainProductCount")),
@@ -885,4 +1090,4 @@ def build_direct_payload(
             report["abstract"] += note
             report["summary"] += note
             report["caliber"]["limit"] += note
-    return report
+    return apply_content_review(report, evidence)

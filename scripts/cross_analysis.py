@@ -16,6 +16,7 @@ fabricated).
 
 from __future__ import annotations
 
+import ast
 from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Mapping, Optional
 
@@ -36,13 +37,14 @@ def source_ratio_percent(value: Any) -> Optional[Decimal]:
     text = str(value).strip()
     if not text or text in {"-", "—"}:
         return None
-    if "%" in text:
+    had_percent = "%" in text
+    if had_percent:
         text = text.replace("%", "").strip()
     try:
         number = Decimal(text)
     except InvalidOperation:
         return None
-    if number != 0 and abs(number) <= 1:
+    if not had_percent and number != 0 and abs(number) <= 1:
         number *= 100
     return number
 
@@ -402,9 +404,9 @@ def insight_channel_competition(data: Mapping[str, Any]) -> Optional[Dict[str, A
     if search_total is not None:
         parts.append(f"渠道关联搜索返回 {search_total} 条")
     if isinstance(financial, dict) and financial.get("categoryCount") is not None:
-        parts.append(f"财务分类样本 {financial.get('categoryCount')}")
+        parts.append(f"财务维度同行总数 {financial.get('categoryCount')}")
     if isinstance(sales, dict) and sales.get("categoryCount") is not None:
-        parts.append(f"销售分类样本 {sales.get('categoryCount')}")
+        parts.append(f"销售维度同行总数 {sales.get('categoryCount')}")
     return {
         "feature": "渠道关联搜索事实",
         "evidence": "、".join(parts) + "。",
@@ -550,6 +552,56 @@ def _channel_rows(data: Mapping[str, Any]) -> List[Dict[str, Any]]:
     return rows
 
 
+
+def _literal_value(value: Any) -> Any:
+    if isinstance(value, str):
+        stripped = value.strip()
+        if (stripped.startswith("{") and stripped.endswith("}")) or (
+            stripped.startswith("[") and stripped.endswith("]")
+        ):
+            try:
+                return ast.literal_eval(stripped)
+            except (ValueError, SyntaxError):
+                return value
+    return value
+
+
+def _readable_address(value: Any) -> str:
+    obj = _literal_value(value)
+    if isinstance(obj, dict):
+        prefix = "".join(
+            str(obj.get(k) or "") for k in ("province", "city", "district")
+        )
+        text = (
+            str(obj.get("value") or "")
+            .strip()
+            .replace("中国.", "")
+            .replace("中国", "")
+            .replace(".", "")
+        )
+        if prefix:
+            index = text.rfind(prefix)
+            if index >= 0:
+                suffix = text[index + len(prefix) :]
+                city_district = "".join(
+                    str(obj.get(k) or "") for k in ("city", "district")
+                )
+                while city_district and suffix.startswith(city_district):
+                    suffix = suffix[len(city_district) :]
+                return prefix + suffix
+            return prefix
+        if text:
+            return text
+    return str(value) if value not in (None, "", "-") else "-"
+
+
+def _readable_list(value: Any) -> str:
+    obj = _literal_value(value)
+    if isinstance(obj, (list, tuple, set)):
+        return "；".join(str(x) for x in obj if x not in (None, "", "-"))
+    return str(value) if value not in (None, "", "-") else "-"
+
+
 def _factory_profile_rows(data: Mapping[str, Any]) -> Dict[str, str]:
     """工厂概况 KV."""
     factory = _factory(data)
@@ -557,7 +609,7 @@ def _factory_profile_rows(data: Mapping[str, Any]) -> Dict[str, str]:
     if factory.get("factoryScale"):
         out["工厂规模"] = str(factory["factoryScale"])
     if factory.get("factoryAddress"):
-        out["工厂地址"] = str(factory["factoryAddress"])
+        out["工厂地址"] = _readable_address(factory["factoryAddress"])
     reg_cap = _pick(factory, "regCapital", "注册资本")
     if reg_cap:
         out["注册资本"] = str(reg_cap)
@@ -591,7 +643,7 @@ def _factory_capabilities_rows(data: Mapping[str, Any]) -> Dict[str, str]:
     if isinstance(devices, list) and devices:
         out["主要设备"] = "、".join(str(d) for d in devices if d)
     if factory.get("managementSystemCertification"):
-        out["管理体系认证"] = str(factory["managementSystemCertification"])
+        out["管理体系认证"] = _readable_list(factory["managementSystemCertification"])
     production_caps = _pick(factory, "monthlyProductionAmountValue_caps", "月产能_2")
     if production_caps:
         out["月产能"] = str(production_caps)
@@ -906,7 +958,7 @@ def analyze(data: Mapping[str, Any]) -> Dict[str, Any]:
                 "key": "se_holders",
                 "title": "股东出资结构",
                 "kind": "table",
-                "note": "股东持股比例与实缴情况（资本充实性核查基础）",
+                "note": "股东持股比例与实缴情况（资本充实性核查基础）；上市/股份公司可能按股份类别返回，不等同自然人股东名单",
                 "columns": [
                     ("股东名称", "股东名称"),
                     ("持股比例", "持股比例"),
